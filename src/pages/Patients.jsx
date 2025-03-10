@@ -249,7 +249,7 @@ const LabDataUploadPopup = ({ show, onClose, onUpload }) => {
         <div className="overflow-y-auto flex-1 p-4">
           {/* Bulk Upload Section */}
           <div className="container1">
-            <h3 className="text-lg font-semibold mb-3">Bulk Upload</h3>
+            <h3 className="text-lg font-semibold mb-3 text-[#242222]">Bulk Upload</h3>
             <div
               className={`border-2 border-dashed rounded-lg p-4 text-center ${
                 isDragActive ? "border-blue-500 bg-blue-50" : "border-gray-300"
@@ -258,7 +258,7 @@ const LabDataUploadPopup = ({ show, onClose, onUpload }) => {
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
             >
-              <p className="mb-2">📁 Drop your CSV file here or</p>
+              <p className="mb-2 text-[#969696]">📁 Drop your CSV file here or</p>
               <button
                 className="browse-button"
                 onClick={() => document.getElementById("labFileUpload").click()}
@@ -297,7 +297,7 @@ const LabDataUploadPopup = ({ show, onClose, onUpload }) => {
 
           {/* Single Lab Data Form */}
           <div className="container1">
-            <h3 className="text-lg font-semibold mb-3">Add Single Lab Data</h3>
+            <h3 className="text-lg font-semibold mb-3 text-[#242222]">Add Single Lab Data</h3>
             <div
               className={`space-y-3 ${
                 file ? "opacity-50 cursor-not-allowed" : ""
@@ -314,20 +314,20 @@ const LabDataUploadPopup = ({ show, onClose, onUpload }) => {
                   value={singleLabData.hn_number}
                   onChange={handleSingleLabDataChange}
                   maxLength="9"
-                  className="w-full p-2 border rounded-md text-sm"
+                  className="w-full p-2 border rounded-md text-sm text-[#969696]"
                   disabled={!!file}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1 ">
                   Gender
                 </label>
                 <select
                   name="gender"
                   value={singleLabData.gender}
                   onChange={handleSingleLabDataChange}
-                  className="w-full p-2 border rounded-md text-sm"
+                  className="w-full p-2 border rounded-md text-sm text-[#969696]"
                   disabled={!!file}
                 >
                   <option value="">Select Gender</option>
@@ -337,14 +337,14 @@ const LabDataUploadPopup = ({ show, onClose, onUpload }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1 ">
                   Blood Type
                 </label>
                 <select
                   name="blood_type"
                   value={singleLabData.blood_type}
                   onChange={handleSingleLabDataChange}
-                  className="w-full p-2 border rounded-md text-sm"
+                  className="w-full p-2 border rounded-md text-sm text-[#969696]"
                   disabled={!!file}
                 >
                   <option value="">Select Blood Type</option>
@@ -369,7 +369,7 @@ const LabDataUploadPopup = ({ show, onClose, onUpload }) => {
                   placeholder="Enter Age"
                   value={singleLabData.age}
                   onChange={handleSingleLabDataChange}
-                  className="w-full p-2 border rounded-md text-sm"
+                  className="w-full p-2 border rounded-md text-sm text-[#969696]"
                   disabled={!!file}
                 />
               </div>
@@ -383,7 +383,7 @@ const LabDataUploadPopup = ({ show, onClose, onUpload }) => {
                   name="date_of_birth"
                   value={singleLabData.date_of_birth}
                   onChange={handleSingleLabDataChange}
-                  className="w-full p-2 border rounded-md text-sm"
+                  className="w-full p-2 border rounded-md text-sm text-[#969696]"
                   disabled={!!file}
                 />
               </div>
@@ -397,7 +397,7 @@ const LabDataUploadPopup = ({ show, onClose, onUpload }) => {
                   name="order_date"
                   value={singleLabData.order_date}
                   onChange={handleSingleLabDataChange}
-                  className="w-full p-2 border rounded-md text-sm"
+                  className="w-full p-2 border rounded-md text-sm text-[#969696]"
                   disabled={!!file}
                 />
               </div>
@@ -413,7 +413,7 @@ const LabDataUploadPopup = ({ show, onClose, onUpload }) => {
                   placeholder="Enter Weight"
                   value={singleLabData.weight}
                   onChange={handleSingleLabDataChange}
-                  className="w-full p-2 border rounded-md text-sm"
+                  className="w-full p-2 border rounded-md text-sm text-[#969696]"
                   disabled={!!file}
                 />
               </div>
@@ -429,7 +429,7 @@ const LabDataUploadPopup = ({ show, onClose, onUpload }) => {
                   placeholder="Enter Height"
                   value={singleLabData.height}
                   onChange={handleSingleLabDataChange}
-                  className="w-full p-2 border rounded-md text-sm"
+                  className="w-full p-2 border rounded-md text-sm text-[#969696]"
                   disabled={!!file}
                 />
               </div>
@@ -458,7 +458,7 @@ const LabDataUploadPopup = ({ show, onClose, onUpload }) => {
                   placeholder="Enter Systolic"
                   value={singleLabData.systolic}
                   onChange={handleSingleLabDataChange}
-                  className="w-full p-2 border rounded-md text-sm"
+                  className="w-full p-2 border rounded-md text-sm text-[#969696]"
                   disabled={!!file}
                 />
               </div>
@@ -474,7 +474,7 @@ const LabDataUploadPopup = ({ show, onClose, onUpload }) => {
                   placeholder="Enter Diastolic"
                   value={singleLabData.diastolic}
                   onChange={handleSingleLabDataChange}
-                  className="w-full p-2 border rounded-md text-sm"
+                  className="w-full p-2 border rounded-md text-sm text-[#969696]"
                   disabled={!!file}
                 />
               </div>
@@ -687,7 +687,7 @@ const PatientUploadPopup = ({ show, onClose, onUpload }) => {
     <div className="modal-container1">
       <div className="bg-white rounded-lg w-full max-w-lg max-h-[80vh] flex flex-col">
         {/* Header - Fixed */}
-        <div className="p-4 flex justify-between items-center">
+        <div className="p-4 flex justify-between items-center text-[#242222]">
           <h2 className="text-xl font-bold">Add New Patients</h2>
           <button
             onClick={onClose}
@@ -701,7 +701,7 @@ const PatientUploadPopup = ({ show, onClose, onUpload }) => {
         <div className="overflow-y-auto flex-1 p-4">
           {/* Bulk Upload Section */}
           <div className="container1">
-            <h3 className="text-lg font-semibold mb-3">Bulk Upload</h3>
+            <h3 className="text-lg font-semibold mb-3 text-[#242222]">Bulk Upload</h3>
             <div
               className={`border-2 border-dashed rounded-lg p-4 text-center ${
                 isDragActive ? "border-blue-500 bg-blue-50" : "border-gray-300"
@@ -710,7 +710,7 @@ const PatientUploadPopup = ({ show, onClose, onUpload }) => {
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
             >
-              <p className="mb-2">📁 Drop your CSV file here or</p>
+              <p className="mb-2 text-[#242222]">📁 Drop your CSV file here or</p>
               <button
                 className="browse-button"
                 onClick={() => document.getElementById("fileUpload").click()}
@@ -749,7 +749,7 @@ const PatientUploadPopup = ({ show, onClose, onUpload }) => {
 
           {/* Single Patient Form */}
           <div className="container1">
-            <h3 className="text-lg font-semibold mb-3">Add A Single Patient</h3>
+            <h3 className="text-lg font-semibold mb-3 text-[#242222]">Add A Single Patient</h3>
             <div
               className={`space-y-3 ${
                 file ? "opacity-50 cursor-not-allowed" : ""
@@ -765,7 +765,7 @@ const PatientUploadPopup = ({ show, onClose, onUpload }) => {
                   placeholder="Enter HN Number"
                   value={singlePatient.hn_number}
                   onChange={handleSinglePatientChange}
-                  className="w-full p-2 border rounded-md text-sm"
+                  className="w-full p-2 border rounded-md text-sm placeholder-[#969696] text-[#969696]"
                   disabled={!!file}
                 />
               </div>
@@ -779,7 +779,7 @@ const PatientUploadPopup = ({ show, onClose, onUpload }) => {
                   placeholder="Enter Full Name"
                   value={singlePatient.name}
                   onChange={handleSinglePatientChange}
-                  className="w-full p-2 border rounded-md text-sm"
+                  className="w-full p-2 border rounded-md text-sm placeholder-[#969696] text-[#969696]"
                   disabled={!!file}
                 />
               </div>
@@ -793,7 +793,7 @@ const PatientUploadPopup = ({ show, onClose, onUpload }) => {
                   placeholder="Enter Citizen ID"
                   value={singlePatient.citizen_id}
                   onChange={handleSinglePatientChange}
-                  className="w-full p-2 border rounded-md text-sm"
+                  className="w-full p-2 border rounded-md text-sm placeholder-[#969696] text-[#969696]"
                   disabled={!!file}
                 />
               </div>
@@ -807,7 +807,7 @@ const PatientUploadPopup = ({ show, onClose, onUpload }) => {
                   placeholder="Enter Phone Number"
                   value={singlePatient.phone_no}
                   onChange={handleSinglePatientChange}
-                  className="w-full p-2 border rounded-md text-sm"
+                  className="w-full p-2 border rounded-md text-sm placeholder-[#969696] text-[#969696]"
                   disabled={!!file}
                 />
               </div>
@@ -819,7 +819,7 @@ const PatientUploadPopup = ({ show, onClose, onUpload }) => {
                   name="doctor_id"
                   value={singlePatient.doctor_id}
                   onChange={handleSinglePatientChange}
-                  className="w-full p-2 border rounded-md text-sm"
+                  className="w-full p-2 border rounded-md text-sm text-[#969696]"
                   disabled={!!file}
                 >
                   <option value="">Select Doctor</option>
@@ -1111,9 +1111,9 @@ const Patients = ({ onNavigateToDetails = () => {} }) => {
   };
 
   return (
-    <div className="table-container p-6 font-sans">
+    <div className="table-container font-sans">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Patient Info</h1>
+        <h1 className="text-black">Patient Info</h1>
         <div className="flex gap-4">
           <button
             onClick={() => setShowLabUploadPopup(true)}
@@ -1133,27 +1133,27 @@ const Patients = ({ onNavigateToDetails = () => {} }) => {
       </div>
 
       <div className="flex items-center mb-6">
-        <div className="flex items-center border border-gray-300 rounded px-3 py-2 mr-4">
-          <Search size={18} className="text-gray-500" />
+        <div className="flex items-center border border-gray-300 rounded-full w-[200px] h-8 px-3 py-2 mr-4 bg-[#E8F9F1]">
+          <Search size={18} className="text-[#3BA092]" />
           <input
             type="text"
-            placeholder="Search patients..."
+            placeholder="Search"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="ml-2 outline-none"
+            className="ml-2 outline-none bg-transparent w-full placeholder-[#969696] text-[#969696]"
           />
         </div>
-        <button className="flex items-center bg-gray-100 px-4 py-2 rounded hover:bg-gray-200">
-          <Filter size={18} className="mr-2" /> Filter by Date
-        </button>
+        {/* <button className="flex items-center bg-transparent border rounded-full border-[#3BA092] w-[158px] h-8 px-4 py-2 rounded hover:bg-gray-50 text-xs text-[#969696]">
+          <Filter size={18} className="mr-2 text-[#3BA092]" /> Filter by Date
+        </button> */}
       </div>
 
       <div className="table-wrapper">
         <table className="table-content">
           <thead>
-            <tr className="hover:bg-gray-50 bg-gray-100">
+            <tr className="hover:bg-gray-50 bg-gray-100 text-[#242222]">
               {[
-                { key: "hn_number", label: "HN NUMBER", width: "20%" },
+                { key: "hn_number", label: "HN", width: "20%" },
                 { key: "name", label: "Name", width: "20%" },
                 { key: "phone_no", label: "Phone No", width: "20%" },
                 {
@@ -1170,21 +1170,21 @@ const Patients = ({ onNavigateToDetails = () => {} }) => {
                 <th
                   key={column.key}
                   onClick={() => handleSort(column.key)}
-                  className="p-4 text-center border-b cursor-pointer hover:bg-gray-200"
+                  className="p-4 text-center cursor-pointer hover:bg-gray-200"
                   style={{ width: column.width }}
                 >
-                  <div className="flex items-center justify-start">
+                  <div className="flex items-center justify-between">
                     {column.label}
-                    {sortConfig.key === column &&
+                    {sortConfig.key === column.key &&
                       (sortConfig.direction === "ascending" ? (
-                        <ChevronUp size={16} className="ml-1" />
+                        <ChevronUp size={16} className="ml-1 text-[#595959]" />
                       ) : (
-                        <ChevronDown size={16} className="ml-1" />
+                        <ChevronDown size={16} className="ml-1 text-[#595959]" />
                       ))}
                   </div>
                 </th>
               ))}
-              <th className="p-4 text-left border-b">Action</th>
+              <th className="p-4 text-left">Action</th>
             </tr>
           </thead>
           <tbody>
@@ -1199,14 +1199,15 @@ const Patients = ({ onNavigateToDetails = () => {} }) => {
                 <tr
                   key={patient.id}
                   className={`
-                  ${index % 2 === 0 ? "bg-white" : "bg-gray-50"} 
-                  hover:bg-blue-50 transition-colors duration-150
+                  
+                  hover:bg-gray-50 transition-colors duration-150
+                   border-b border-gray-300
                 `}
                 >
-                  <td className="p-4 text-start">{patient.hn_number}</td>
-                  <td className="p-4 text-start">{patient.name}</td>
-                  <td className="p-4 text-start">{patient.phone_no}</td>
-                  <td className="p-4 text-start">
+                  <td className="p-4 text-start text-[#595959]">{patient.hn_number}</td>
+                  <td className="p-4 text-start text-[#595959]">{patient.name}</td>
+                  <td className="p-4 text-start text-[#595959]">{patient.phone_no}</td>
+                  <td className="p-4 text-start text-[#595959]">
                     <StatusIcon type="lab" status={patient.lab_data_status} />
                   </td>
                   <td className="p-4 text-start">
@@ -1217,9 +1218,9 @@ const Patients = ({ onNavigateToDetails = () => {} }) => {
                   </td>
                   <td className="p-4 relative">
                     <MoreVertical
-                      size={18}
+                      size={25}
                       data-action-icon
-                      className="cursor-pointer"
+                      className="cursor-pointer text-[#595959]"
                       onClick={(e) => {
                         e.stopPropagation();
                         const rect = e.currentTarget.getBoundingClientRect();

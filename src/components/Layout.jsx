@@ -28,7 +28,7 @@ const Layout = ({ currentRoute, setCurrentRoute }) => {
       <Sidebar currentRoute={currentRoute} setCurrentRoute={setCurrentRoute} />
       <div className="ml-64 flex-1">
         <Navbar currentRoute={currentRoute} />
-        <main className="mt-16 p-6">
+        <main className="mt-16">
           {renderContent()}
         </main>
       </div>

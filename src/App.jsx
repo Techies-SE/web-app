@@ -3,7 +3,7 @@ import Layout from './components/Layout';
 
 
 const App = () => {
- const [currentRoute, setCurrentRoute] = useState('dashboard');
+ const [currentRoute, setCurrentRoute] = useState('patients');
 
 
  return (

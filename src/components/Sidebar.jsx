@@ -3,30 +3,30 @@ import { LayoutDashboard, Users, Calendar, Stethoscope, Users2, Settings, LogOut
 
 const Sidebar = ({ currentRoute, setCurrentRoute }) => {
   const menuItems = [
-    { icon: LayoutDashboard, text: 'Dashboard', path: 'dashboard' },
+    // { icon: LayoutDashboard, text: 'Dashboard', path: 'dashboard' },
     { icon: Users, text: 'Patients', path: 'patients' },
-    { icon: Calendar, text: 'Appointments', path: 'appointments' },
+    // { icon: Calendar, text: 'Appointments', path: 'appointments' },
     { icon: Stethoscope, text: 'Doctors', path: 'doctors' },
-    { icon: Users2, text: 'Staffs', path: 'staffs' },
-    { icon: Settings, text: 'Settings', path: 'settings' },
+    // { icon: Users2, text: 'Staffs', path: 'staffs' },
+    // { icon: Settings, text: 'Settings', path: 'settings' },
   ];
 
   return (
-    <div className="h-screen w-64 bg-white border-r fixed left-0 top-0">
+    <div className="sidebar-container h-screen w-64 bg-white border-r fixed left-0 top-0 shadow-md">
       <div className="p-4 border-b">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-red-500 rounded-full"></div>
-          <span className="font-semibold text-lg">MFU Wellness Centre</span>
+          <span className="font-semibold text-lg text-black">MFU Wellness Centre</span>
         </div>
       </div>
       
-      <nav className="p-4">
+      <nav className="">
         {menuItems.map((item, index) => (
           <button
             key={index}
             onClick={() => setCurrentRoute(item.path)}
-            className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer mb-2 w-full text-left ${
-              currentRoute === item.path ? 'bg-green-50 text-green-600' : 'hover:bg-gray-50'
+            className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer mb-2 w-full text-left transition-all text-black ${
+              currentRoute === item.path ? 'active' : 'hover:bg-gray-50'
             }`}
           >
             <item.icon size={20} />

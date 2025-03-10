@@ -217,25 +217,25 @@ const Doctors = () => {
       </div>
 
       <div className="flex items-center mb-6">
-        <div className="flex items-center border border-gray-300 rounded px-3 py-2 mr-4">
-          <Search size={18} className="text-gray-500" />
+        <div className="flex items-center border border-gray-300 rounded-full w-[200px] h-8 px-3 py-2 mr-4 bg-[#E8F9F1]">
+          <Search size={18} className="text-[#3BA092]" />
           <input
             type="text"
-            placeholder="Search doctors..."
+            placeholder="Search"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="ml-2 outline-none"
+            className="ml-2 outline-none bg-transparent w-full placeholder-[#969696] text-[#969696]"
           />
         </div>
-        <button className="flex items-center bg-gray-100 px-4 py-2 rounded hover:bg-gray-200">
-          <Filter size={18} className="mr-2" /> Filter by Date
-        </button>
+        {/* <button className="flex items-center bg-transparent border rounded-full border-[#3BA092] w-[158px] h-8 px-4 py-2 rounded hover:bg-gray-50 text-xs text-[#969696]">
+          <Filter size={18} className="mr-2 text-[#3BA092]" /> Filter by Date
+        </button> */}
       </div>
 
       <div className="table-wrapper">
         <table className="table-content">
           <thead>
-            <tr className="hover:bg-gray-50 bg-gray-100">
+            <tr className="hover:bg-gray-50 bg-gray-100 text-[#242222]">
               {[
                 { key: "doctor_name", label: "Doctor Name", width: "15%" },
                 {
@@ -251,21 +251,21 @@ const Doctors = () => {
                 <th
                   key={column.key}
                   onClick={() => handleSort(column.key)}
-                  className="p-4 text-center border-b cursor-pointer hover:bg-gray-200"
+                  className="p-4 text-center cursor-pointer hover:bg-gray-200"
                   style={{ width: column.width }}
                 >
-                  <div className="flex items-center justify-start">
+                  <div className="flex items-center justify-between">
                     {column.label}
                     {sortConfig.key === column.key &&
                       (sortConfig.direction === "ascending" ? (
-                        <ChevronUp size={16} className="ml-1" />
+                        <ChevronUp size={16} className="ml-1 text-[#595959]" />
                       ) : (
-                        <ChevronDown size={16} className="ml-1" />
+                        <ChevronDown size={16} className="ml-1 text-[#595959]" />
                       ))}
                   </div>
                 </th>
               ))}
-              <th className="p-4 text-left border-b">Action</th>
+              <th className="p-4 text-left">Action</th>
             </tr>
           </thead>
           <tbody>
@@ -280,23 +280,24 @@ const Doctors = () => {
                 <tr
                   key={doctor.doctor_id}
                   className={`
-                  ${index % 2 === 0 ? "bg-white" : "bg-gray-50"} 
-                  hover:bg-blue-50 transition-colors duration-150
+                   hover:bg-gray-50 transition-colors duration-150
+                   border-b border-gray-300
+                  
                 `}
                 >
-                  <td className="p-4 text-start">{doctor.doctor_name}</td>
-                  <td className="p-4 text-start">
+                  <td className="p-4 text-start text-[#595959]">{doctor.doctor_name}</td>
+                  <td className="p-4 text-start text-[#595959]">
                     {doctor.doctor_specialization}
                   </td>
-                  <td className="p-4 text-start">{doctor.department}</td>
-                  <td className="p-4 text-start">{doctor.doctor_phone_no}</td>
-                  <td className="p-4 text-start">{doctor.doctor_email}</td>
-                  <td className="p-4 text-start">{doctor.status}</td>
+                  <td className="p-4 text-start text-[#595959]">{doctor.department}</td>
+                  <td className="p-4 text-start text-[#595959]">{doctor.doctor_phone_no}</td>
+                  <td className="p-4 text-start text-[#595959]">{doctor.doctor_email}</td>
+                  <td className="p-4 text-start text-[#595959]">{doctor.status}</td>
                   <td className="p-4 relative">
                     <MoreVertical
-                      size={18}
+                      size={25}
                       data-action-icon
-                      className="cursor-pointer"
+                      className="cursor-pointer text-[#595959]"
                       onClick={(e) => {
                         e.stopPropagation();
                         setPopupIndex(popupIndex === index ? null : index);
@@ -363,14 +364,14 @@ const Doctors = () => {
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-container">
-            <div className="modal-header">
+            <div className="modal-header text-[#242222]">
               <h2>Create New Doctor</h2>
               <button onClick={() => setShowModal(false)} className="close-btn">
                 <X size={16} />
               </button>
             </div>
             <form onSubmit={handleFormSubmit} className="modal-form">
-              <div className="form-group">
+              <div className="form-group text-[#242222]">
                 <label>Name</label>
                 <input
                   type="text"
@@ -381,7 +382,7 @@ const Doctors = () => {
                   placeholder="Enter doctor's name"
                 />
               </div>
-              <div className="form-group">
+              <div className="form-group text-[#242222]">
                 <label>Phone Number</label>
                 <input
                   type="text"
@@ -392,7 +393,7 @@ const Doctors = () => {
                   placeholder="Enter phone number"
                 />
               </div>
-              <div className="form-group">
+              <div className="form-group text-[#242222]">
                 <label>Email</label>
                 <input
                   type="email"
@@ -403,7 +404,7 @@ const Doctors = () => {
                   placeholder="Enter email address"
                 />
               </div>
-              <div className="form-group">
+              <div className="form-group text-[#242222]">
                 <label>Password</label>
                 <input
                   type="password"
@@ -414,7 +415,7 @@ const Doctors = () => {
                   placeholder="Enter password"
                 />
               </div>
-              <div className="form-group">
+              <div className="form-group text-[#242222]">
                 <label>Specialization</label>
                 <input
                   type="text"
@@ -425,7 +426,7 @@ const Doctors = () => {
                   placeholder="Enter specialization"
                 />
               </div>
-              <div className="form-group">
+              <div className="form-group text-[#242222]">
                 <label>Status</label>
                 <select
                   name="status"
@@ -453,7 +454,7 @@ const Doctors = () => {
                 ))}
               </select>
             </div> */}
-              <div className="form-group">
+              <div className="form-group text-[#242222]">
                 <label>Department</label>
                 <select
                   name="department_id"
