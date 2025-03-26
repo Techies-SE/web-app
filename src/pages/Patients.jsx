@@ -1143,9 +1143,9 @@ const Patients = ({ onNavigateToDetails = () => {} }) => {
             className="ml-2 outline-none bg-transparent w-full placeholder-[#969696] text-[#969696]"
           />
         </div>
-        {/* <button className="flex items-center bg-transparent border rounded-full border-[#3BA092] w-[158px] h-8 px-4 py-2 rounded hover:bg-gray-50 text-xs text-[#969696]">
+        <button className="flex items-center bg-transparent border rounded-full border-[#3BA092] w-[158px] h-8 px-4 py-2 rounded hover:bg-gray-50 text-xs text-[#969696]">
           <Filter size={18} className="mr-2 text-[#3BA092]" /> Filter by Date
-        </button> */}
+        </button>
       </div>
 
       <div className="table-wrapper">
@@ -1244,7 +1244,7 @@ const Patients = ({ onNavigateToDetails = () => {} }) => {
                         >
                           <button
                             onClick={() => handleViewDetails(patient)}
-                            className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                            className="w-full text-left px-4 py-2 text-black hover:bg-gray-100"
                           >
                             View Details
                           </button>

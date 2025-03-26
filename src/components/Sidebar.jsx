@@ -5,7 +5,7 @@ const Sidebar = ({ currentRoute, setCurrentRoute }) => {
   const menuItems = [
     // { icon: LayoutDashboard, text: 'Dashboard', path: 'dashboard' },
     { icon: Users, text: 'Patients', path: 'patients' },
-    // { icon: Calendar, text: 'Appointments', path: 'appointments' },
+    { icon: Calendar, text: 'Appointments', path: 'appointments' },
     { icon: Stethoscope, text: 'Doctors', path: 'doctors' },
     // { icon: Users2, text: 'Staffs', path: 'staffs' },
     // { icon: Settings, text: 'Settings', path: 'settings' },

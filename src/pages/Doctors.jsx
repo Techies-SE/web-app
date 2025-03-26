@@ -11,6 +11,8 @@ import {
   UserCheck,
   UserX,
 } from "lucide-react";
+import { createPortal } from "react-dom";
+
 
 const Doctors = () => {
   const [doctors, setDoctors] = useState([]);
@@ -25,6 +27,7 @@ const Doctors = () => {
     status: "",
     department_id: "",
   });
+  const [buttonPosition, setButtonPosition] = useState({ top: 0, left: 0 });
   const [popupIndex, setPopupIndex] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const doctorsPerPage = 10;
@@ -32,6 +35,20 @@ const Doctors = () => {
     key: "doctor_name",
     direction: "ascending",
   });
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // Close popup if click is not within the popup
+      if (!event.target.closest('.action-popup')) {
+        setPopupIndex(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     fetch("http://localhost:3000/doctors-with-departments")
@@ -208,7 +225,7 @@ const Doctors = () => {
   return (
     <div className="table-container p-6 font-sans">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Doctor Info</h1>
+        <h1 className="text-black">Doctor Info</h1>
         <div className="flex gap-4">
           <button onClick={() => setShowModal(true)} className="uButton">
             + New Doctor
@@ -227,9 +244,9 @@ const Doctors = () => {
             className="ml-2 outline-none bg-transparent w-full placeholder-[#969696] text-[#969696]"
           />
         </div>
-        {/* <button className="flex items-center bg-transparent border rounded-full border-[#3BA092] w-[158px] h-8 px-4 py-2 rounded hover:bg-gray-50 text-xs text-[#969696]">
+        <button className="flex items-center bg-transparent border rounded-full border-[#3BA092] w-[158px] h-8 px-4 py-2 rounded hover:bg-gray-50 text-xs text-[#969696]">
           <Filter size={18} className="mr-2 text-[#3BA092]" /> Filter by Date
-        </button> */}
+        </button>
       </div>
 
       <div className="table-wrapper">
@@ -300,28 +317,40 @@ const Doctors = () => {
                       className="cursor-pointer text-[#595959]"
                       onClick={(e) => {
                         e.stopPropagation();
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        setButtonPosition({
+                          top: rect.bottom + window.scrollY,
+                          left: rect.right - 110, // Adjust popup position from right edge
+                        });
                         setPopupIndex(popupIndex === index ? null : index);
                       }}
                     />
-                    {popupIndex === index && (
-                      <div
+                   {popupIndex === index &&
+                      createPortal(
+                        <div
                         data-action-popup
-                        className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50"
-                      >
-                        <button
-                          onClick={() => handleViewDetails(doctor)}
-                          className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                        className="fixed bg-white rounded-md shadow-lg z-[9999]"
+                        style={{
+                          top: `${buttonPosition.top}px`,
+                          left: `${buttonPosition.left}px`,
+                          width: "12rem",
+                        }}
                         >
-                          View Details
-                        </button>
-                        <button
-                          onClick={() => handleDeleteDoctor(doctor.doctor_id)}
-                          className="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100"
-                        >
-                          Delete Data
-                        </button>
-                      </div>
-                    )}
+                          <button
+                            onClick={() => handleViewDetails(doctor)}
+                            className="w-full text-left px-4 py-2 text-black hover:bg-gray-100"
+                          >
+                            View Details
+                          </button>
+                          <button
+                            onClick={() => handleDeleteDoctor(doctor.doctor_id)}
+                            className="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100"
+                          >
+                            Delete Data
+                          </button>
+                        </div>,
+                        document.body
+                      )}
                   </td>
                 </tr>
               ))
