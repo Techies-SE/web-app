@@ -6,15 +6,12 @@ import {
   X,
   ChevronUp,
   ChevronDown,
-  CheckCircle2,
-  Clock,
-  UserCheck,
-  UserX,
+  Eye,
+  Trash2,
 } from "lucide-react";
 import { createPortal } from "react-dom";
 
-
-const Doctors = () => {
+const Doctors = ({setSelectedDoctorId}) => {
   const [doctors, setDoctors] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
@@ -39,14 +36,14 @@ const Doctors = () => {
   useEffect(() => {
     const handleClickOutside = (event) => {
       // Close popup if click is not within the popup
-      if (!event.target.closest('.action-popup')) {
+      if (!event.target.closest(".action-popup")) {
         setPopupIndex(null);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -198,7 +195,8 @@ const Doctors = () => {
   }, []);
 
   const handleViewDetails = (doctor) => {
-    navigate(`/doctors/${doctor.doctor_id}/details`);
+    //navigate(`/doctors/${doctor.doctor_id}/details`);
+    setSelectedDoctorId(doctor.doctor_id);
   };
 
   // Function to delete a delete by id
@@ -277,7 +275,10 @@ const Doctors = () => {
                       (sortConfig.direction === "ascending" ? (
                         <ChevronUp size={16} className="ml-1 text-[#595959]" />
                       ) : (
-                        <ChevronDown size={16} className="ml-1 text-[#595959]" />
+                        <ChevronDown
+                          size={16}
+                          className="ml-1 text-[#595959]"
+                        />
                       ))}
                   </div>
                 </th>
@@ -302,55 +303,37 @@ const Doctors = () => {
                   
                 `}
                 >
-                  <td className="p-4 text-start text-[#595959]">{doctor.doctor_name}</td>
+                  <td className="p-4 text-start text-[#595959]">
+                    {doctor.doctor_name}
+                  </td>
                   <td className="p-4 text-start text-[#595959]">
                     {doctor.doctor_specialization}
                   </td>
-                  <td className="p-4 text-start text-[#595959]">{doctor.department}</td>
-                  <td className="p-4 text-start text-[#595959]">{doctor.doctor_phone_no}</td>
-                  <td className="p-4 text-start text-[#595959]">{doctor.doctor_email}</td>
-                  <td className="p-4 text-start text-[#595959]">{doctor.status}</td>
-                  <td className="p-4 relative">
-                    <MoreVertical
-                      size={25}
-                      data-action-icon
-                      className="cursor-pointer text-[#595959]"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        setButtonPosition({
-                          top: rect.bottom + window.scrollY,
-                          left: rect.right - 110, // Adjust popup position from right edge
-                        });
-                        setPopupIndex(popupIndex === index ? null : index);
-                      }}
+                  <td className="p-4 text-start text-[#595959]">
+                    {doctor.department}
+                  </td>
+                  <td className="p-4 text-start text-[#595959]">
+                    {doctor.doctor_phone_no}
+                  </td>
+                  <td className="p-4 text-start text-[#595959]">
+                    {doctor.doctor_email}
+                  </td>
+                  <td className="p-4 text-start text-[#595959]">
+                    {doctor.status}
+                  </td>
+                  <td className="p-4 flex items-center space-x-3">
+                    <Eye
+                      size={20}
+                      className="cursor-pointer text-[#3BA092] hover:text-[#2A7E6C]"
+                      onClick={() => handleViewDetails(doctor)}
+                      title="View Details"
                     />
-                   {popupIndex === index &&
-                      createPortal(
-                        <div
-                        data-action-popup
-                        className="fixed bg-white rounded-md shadow-lg z-[9999]"
-                        style={{
-                          top: `${buttonPosition.top}px`,
-                          left: `${buttonPosition.left}px`,
-                          width: "12rem",
-                        }}
-                        >
-                          <button
-                            onClick={() => handleViewDetails(doctor)}
-                            className="w-full text-left px-4 py-2 text-black hover:bg-gray-100"
-                          >
-                            View Details
-                          </button>
-                          <button
-                            onClick={() => handleDeleteDoctor(doctor.doctor_id)}
-                            className="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100"
-                          >
-                            Delete Data
-                          </button>
-                        </div>,
-                        document.body
-                      )}
+                    <Trash2
+                      size={20}
+                      className="cursor-pointer text-red-500 hover:text-red-700"
+                      onClick={() => handleDeleteDoctor(doctor.doctor_id)}
+                      title="Delete Doctor"
+                    />
                   </td>
                 </tr>
               ))

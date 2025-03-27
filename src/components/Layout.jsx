@@ -1,22 +1,40 @@
-import React from 'react';
-import Sidebar from './Sidebar';
-import Navbar from './Navbar';
-import { Dashboard, Patients, Appointments, Doctors, Staffs, Settings } from '../pages';
+import React from "react";
+import { useState } from "react";
+import Sidebar from "./Sidebar";
+import Navbar from "./Navbar";
+import {
+  Dashboard,
+  Patients,
+  Appointments,
+  Doctors,
+  Staffs,
+  Settings,
+  DoctorDetails,
+} from "../pages";
 
 const Layout = ({ currentRoute, setCurrentRoute }) => {
+  const [selectedDoctorId, setSelectedDoctorId] = useState(null);
   const renderContent = () => {
     switch (currentRoute) {
-      case 'dashboard':
+      case "dashboard":
         return <Dashboard />;
-      case 'patients':
+      case "patients":
         return <Patients />;
-      case 'appointments':
+      case "appointments":
         return <Appointments />;
-      case 'doctors':
-        return <Doctors />;
-      case 'staffs':
+      case "doctors":
+        return selectedDoctorId ? (
+          <DoctorDetails
+            doctorId={selectedDoctorId}
+            setCurrentRoute={setCurrentRoute}
+            setSelectedDoctorId={setSelectedDoctorId}
+          />
+        ) : (
+          <Doctors setSelectedDoctorId={setSelectedDoctorId} />
+        );
+      case "staffs":
         return <Staffs />;
-      case 'settings':
+      case "settings":
         return <Settings />;
       default:
         return <Dashboard />;
@@ -28,9 +46,7 @@ const Layout = ({ currentRoute, setCurrentRoute }) => {
       <Sidebar currentRoute={currentRoute} setCurrentRoute={setCurrentRoute} />
       <div className="ml-64 flex-1">
         <Navbar currentRoute={currentRoute} />
-        <main className="mt-16">
-          {renderContent()}
-        </main>
+        <main className="mt-16">{renderContent()}</main>
       </div>
     </div>
   );
