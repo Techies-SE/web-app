@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ArrowLeft, Trash2, Edit } from "lucide-react";
+import { ArrowLeft, Trash2, Edit, Upload } from "lucide-react";
 import "../DoctorDetails.css";
 
 const DoctorDetails = ({ doctorId, setCurrentRoute, setSelectedDoctorId }) => {
@@ -21,6 +21,9 @@ const DoctorDetails = ({ doctorId, setCurrentRoute, setSelectedDoctorId }) => {
   });
   const [addScheduleLoading, setAddScheduleLoading] = useState(false);
   const [addScheduleError, setAddScheduleError] = useState(null);
+
+  const [profileImage, setProfileImage] = useState(null);
+  const [imageUploadError, setImageUploadError] = useState(null);
 
   // Days for dropdown
   const days = [
@@ -55,6 +58,99 @@ const DoctorDetails = ({ doctorId, setCurrentRoute, setSelectedDoctorId }) => {
 
     fetchDoctorDetails();
   }, [doctorId]);
+
+  // Method to handle image upload
+  const handleImageUpload = async (event) => {
+    const file = event.target.files[0];
+    
+    // Validate file type and size
+    if (!file) return;
+
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
+    const maxSize = 5 * 1024 * 1024; // 5MB
+
+    if (!validTypes.includes(file.type)) {
+      setImageUploadError('Invalid file type. Please upload a JPEG, PNG, or GIF.');
+      return;
+    }
+
+    if (file.size > maxSize) {
+      setImageUploadError('File is too large. Maximum size is 5MB.');
+      return;
+    }
+
+    // Create FormData to send file
+    const formData = new FormData();
+    formData.append('profile_image', file);
+
+    try {
+      const response = await fetch(
+        `http://localhost:3000/doctor/${doctorId}/upload-profile-image`, 
+        {
+          method: 'POST',
+          body: formData
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to upload image');
+      }
+
+      const responseData = await response.json();
+
+      // Update doctor state with new image URL
+      setDoctor(prevDoctor => ({
+        ...prevDoctor,
+        profile_image: responseData.imageUrl
+      }));
+
+      // Create local preview of the image
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfileImage(reader.result);
+      };
+      reader.readAsDataURL(file);
+
+      // Clear any previous errors
+      setImageUploadError(null);
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      setImageUploadError(error.message);
+    }
+  };
+
+  // Method to remove profile image
+  const handleRemoveImage = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:3000/doctor/${doctorId}/remove-profile-image`, 
+        {
+          method: 'DELETE'
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to remove image');
+      }
+
+      // Update doctor state to remove image
+      setDoctor(prevDoctor => ({
+        ...prevDoctor,
+        profile_image: null
+      }));
+
+      // Clear local preview
+      setProfileImage(null);
+
+      // Clear any previous errors
+      setImageUploadError(null);
+    } catch (error) {
+      console.error('Error removing image:', error);
+      setImageUploadError(error.message);
+    }
+  };
 
   // Handle navigation back to doctors list
   const handleBack = () => {
@@ -355,13 +451,55 @@ const DoctorDetails = ({ doctorId, setCurrentRoute, setSelectedDoctorId }) => {
       <div className="detail-card">
         {/* Profile Header Section */}
         <div className="profile-header">
-          <img
-            src="/api/placeholder/120/120"
-            alt="Doctor profile"
-            className="profile-image text-gray-800"
-          />
+        <div className="profile-image-container">
+        <input 
+              type="file" 
+              id="profile-image-upload" 
+              accept="image/jpeg,image/png,image/gif"
+              onChange={handleImageUpload}
+              className="hidden"
+            />
+            <label 
+              htmlFor="profile-image-upload" 
+              className="profile-image-wrapper"
+            >
+              {/* Display uploaded or existing image, or placeholder */}
+              <img
+                src={
+                  profileImage || 
+                  doctor.profile_image || 
+                  "/api/placeholder/120/120"
+                }
+                
+                className="profile-image text-gray-800"
+              />
+              <div className="profile-image-overlay">
+                <Upload size={24} className="upload-icon" />
+                <span>Upload Photo</span>
+              </div>
+            </label>
+            {(profileImage || doctor.profile_image) && (
+              <button 
+                onClick={handleRemoveImage}
+                className="remove-image-button"
+                title="Remove profile image"
+              >
+                <Trash2 size={16} />
+              </button>
+            )}
+          </div>
+          {imageUploadError && (
+            <div 
+              className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-2"
+              role="alert"
+            >
+              <strong className="font-bold">Error: </strong>
+              <span className="block sm:inline">{imageUploadError}</span>
+            </div>
+          )}
+
           <div className="profile-info">
-            <h1 className="doctor-name">{doctor.name}</h1>
+            <h1 className="doctor-name text-gray-500">{doctor.name}</h1>
             <p className="doctor-specialization">{doctor.specialization}</p>
             <div className="contact-info">
               <p>Email: {doctor.email}</p>
