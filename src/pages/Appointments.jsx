@@ -11,6 +11,8 @@ const Appointments = () => {
   const [completeCount, setCompleteCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showRescheduleModal, setShowRescheduleModal] = useState(false);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState('11:30 AM');
 
   useEffect(() => {
 
@@ -200,6 +202,14 @@ const Appointments = () => {
     }
   };
 
+  const handleOpenRescheduleModal = () => {
+    setShowRescheduleModal(true);
+  };
+
+  const handleCloseRescheduleModal = () => {
+    setShowRescheduleModal(false);
+  };
+
   const getStatusColor = (status) => {
     switch(status) {
       case 'Pending': return 'text-orange-500';
@@ -208,6 +218,10 @@ const Appointments = () => {
       default: return 'text-gray-500';
     }
   };
+
+  const timeSlots = [
+    '09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM'
+  ];
 
   if (loading) {
     return <div className="w-full h-screen p-8 bg-white">Loading...</div>;
@@ -235,7 +249,7 @@ const Appointments = () => {
         <div className="bg-white shadow rounded-lg">
           <div className="p-6 text-center">
             <div className="text-3xl font-bold text-gray-700">{confirmCount}</div>
-            <div className="text-sm text-gray-500">Confrimed Appointments</div>
+            <div className="text-sm text-gray-500">Confirmed Appointments</div>
           </div>
         </div>
         <div className="bg-white shadow rounded-lg">
@@ -315,7 +329,7 @@ const Appointments = () => {
                         <X className="h-4 w-4" />
                       </button>
                       <button className="border rounded p-1 hover:bg-gray-100">
-                        <Calendar className="h-4 w-4" />
+                        <Calendar className="h-4 w-4" onClick={handleOpenRescheduleModal}/>
                       </button>
                     </div>
                   </td>
@@ -339,6 +353,90 @@ const Appointments = () => {
           </div>
         </div>
       </div>
+      {/* Reschedule Modal */}
+      {showRescheduleModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="absolute inset-0" style={{
+            background: "rgba(0, 0, 0, 0.5)",
+            backdropFilter: "blur(2px)",
+            WebkitBackdropFilter: "blur(2px)",
+          }}></div>
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-md z-10">
+            {/* Modal Header */}
+            <div className="flex justify-between items-center p-4 border-b">
+              <h2 className="text-xl font-bold text-gray-800">Reschedule Appointment</h2>
+              <button onClick={handleCloseRescheduleModal} className="text-gray-400 hover:text-gray-600">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            {/* Doctor Info */}
+            <div className="p-6">
+              <div className="flex items-center mb-6">
+                {/* <div className="h-12 w-12 rounded-full bg-gray-200 overflow-hidden mr-3">
+                  <img 
+                    src="/api/placeholder/48/48" 
+                    alt="Doctor avatar" 
+                    className="h-full w-full object-cover"
+                  />
+                </div> */}
+                <div>
+                  <h3 className="font-semibold text-gray-800">Dr. Michael Brown</h3>
+                  <p className="text-gray-500">Cardiologist</p>
+                </div>
+              </div>
+              
+              {/* Date Selection */}
+              <div className="mb-6">
+                <h3 className="font-medium mb-2 text-gray-800">Select Date</h3>
+                <div className="relative">
+                  <input 
+                    type="text" 
+                    placeholder="dd/mm/yyyy" 
+                    className="w-full p-2 border rounded-md pl-3 pr-10 text-gray-800"
+                  />
+                  <button className="absolute right-2 top-2">
+                    <Calendar className="h-5 w-5 text-gray-400" />
+                  </button>
+                </div>
+              </div>
+              
+              {/* Time Slots */}
+              <div>
+                <h3 className="font-medium mb-2 text-gray-500">Available Time Slots</h3>
+                <div className="grid grid-cols-3 gap-2">
+                  {timeSlots.map(time => (
+                    <button
+                      key={time}
+                      className={`p-3 text-center rounded-md border text-sm ${
+                        selectedTimeSlot === time 
+                          ? 'bg-blue-100 text-blue-600 border-blue-300' 
+                          : 'hover:bg-gray-50 text-gray-400'
+                      }`}
+                      onClick={() => setSelectedTimeSlot(time)}
+                    >
+                      {time}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            
+            {/* Action Buttons */}
+            <div className="flex justify-end p-4 border-t gap-3">
+              <button 
+                onClick={handleCloseRescheduleModal}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+              >
+                Cancel
+              </button>
+              <button className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                Confirm Reschedule
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
