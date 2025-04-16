@@ -11,6 +11,7 @@ import {
   Settings,
   DoctorDetails,
 } from "../pages";
+import Recommendations from "../pages/Staffs";
 
 const Layout = ({ currentRoute, setCurrentRoute }) => {
   const [selectedDoctorId, setSelectedDoctorId] = useState(null);
@@ -32,8 +33,8 @@ const Layout = ({ currentRoute, setCurrentRoute }) => {
         ) : (
           <Doctors setSelectedDoctorId={setSelectedDoctorId} />
         );
-      case "staffs":
-        return <Staffs />;
+      case "recommendations":
+        return <Recommendations />;
       case "settings":
         return <Settings />;
       default:

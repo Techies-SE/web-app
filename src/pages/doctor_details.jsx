@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { ArrowLeft, Trash2, Edit, Upload } from "lucide-react";
 import "../DoctorDetails.css";
@@ -36,83 +37,102 @@ const DoctorDetails = ({ doctorId, setCurrentRoute, setSelectedDoctorId }) => {
     "Sunday",
   ];
 
-  // Fetch doctor details on component mount
+  // Fetch doctor details and image on component mount
   useEffect(() => {
-    const fetchDoctorDetails = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch(
+        // Fetch doctor schedules
+        const scheduleResponse = await fetch(
           `http://localhost:3000/schedule/doctor/${doctorId}`
         );
-        if (!response.ok) {
+        
+        if (!scheduleResponse.ok) {
+          throw new Error("Failed to fetch doctor schedules");
+        }
+        
+        const scheduleData = await scheduleResponse.json();
+        
+        // Fetch doctor details including image URL
+        const doctorResponse = await fetch(
+          `http://localhost:3000/doctors/id=${doctorId}`
+        );
+        
+        if (!doctorResponse.ok) {
           throw new Error("Failed to fetch doctor details");
         }
-        const data = await response.json();
-        setDoctor(data.doctor);
+        
+        const doctorData = await doctorResponse.json();
+        
+        // Combine the data
+        setDoctor({
+          ...scheduleData.doctor,
+          imageUrl: doctorData.imageUrl
+        });
+        
         setLoading(false);
       } catch (error) {
-        console.error("Error fetching doctor details:", error);
+        console.error("Error fetching doctor data:", error);
         setError(error.message);
         setLoading(false);
       }
     };
 
-    fetchDoctorDetails();
+    fetchData();
   }, [doctorId]);
 
   // Method to handle image upload
   const handleImageUpload = async (event) => {
     const file = event.target.files[0];
-    
+  
     // Validate file type and size
     if (!file) return;
-
+  
     const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
     const maxSize = 5 * 1024 * 1024; // 5MB
-
+  
     if (!validTypes.includes(file.type)) {
       setImageUploadError('Invalid file type. Please upload a JPEG, PNG, or GIF.');
       return;
     }
-
+  
     if (file.size > maxSize) {
       setImageUploadError('File is too large. Maximum size is 5MB.');
       return;
     }
-
-    // Create FormData to send file
+  
+    // Prepare FormData
     const formData = new FormData();
-    formData.append('profile_image', file);
-
+    formData.append('image', file); // name must match multer field name!
+  
     try {
       const response = await fetch(
-        `http://localhost:3000/doctor/${doctorId}/upload-profile-image`, 
+        `http://localhost:3000/image/upload/${doctorId}`, // PATCH route
         {
-          method: 'POST',
-          body: formData
+          method: 'PATCH',
+          body: formData,
         }
       );
-
+  
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to upload image');
       }
-
+  
       const responseData = await response.json();
-
+  
       // Update doctor state with new image URL
-      setDoctor(prevDoctor => ({
+      setDoctor((prevDoctor) => ({
         ...prevDoctor,
-        profile_image: responseData.imageUrl
+        imageUrl: responseData.imageUrl // Update with the returned imageUrl
       }));
-
-      // Create local preview of the image
+  
+      // Show local preview
       const reader = new FileReader();
       reader.onloadend = () => {
         setProfileImage(reader.result);
       };
       reader.readAsDataURL(file);
-
-      // Clear any previous errors
+  
       setImageUploadError(null);
     } catch (error) {
       console.error('Error uploading image:', error);
@@ -124,7 +144,7 @@ const DoctorDetails = ({ doctorId, setCurrentRoute, setSelectedDoctorId }) => {
   const handleRemoveImage = async () => {
     try {
       const response = await fetch(
-        `http://localhost:3000/doctor/${doctorId}/remove-profile-image`, 
+        `http://localhost:3000/image/delete/${doctorId}`, 
         {
           method: 'DELETE'
         }
@@ -138,7 +158,7 @@ const DoctorDetails = ({ doctorId, setCurrentRoute, setSelectedDoctorId }) => {
       // Update doctor state to remove image
       setDoctor(prevDoctor => ({
         ...prevDoctor,
-        profile_image: null
+        imageUrl: null
       }));
 
       // Clear local preview
@@ -451,8 +471,8 @@ const DoctorDetails = ({ doctorId, setCurrentRoute, setSelectedDoctorId }) => {
       <div className="detail-card">
         {/* Profile Header Section */}
         <div className="profile-header">
-        <div className="profile-image-container">
-        <input 
+          <div className="profile-image-container">
+            <input 
               type="file" 
               id="profile-image-upload" 
               accept="image/jpeg,image/png,image/gif"
@@ -467,18 +487,18 @@ const DoctorDetails = ({ doctorId, setCurrentRoute, setSelectedDoctorId }) => {
               <img
                 src={
                   profileImage || 
-                  doctor.profile_image || 
+                  doctor.imageUrl || 
                   "/api/placeholder/120/120"
                 }
-                
                 className="profile-image text-gray-800"
+                alt="Doctor profile"
               />
               <div className="profile-image-overlay">
                 <Upload size={24} className="upload-icon" />
                 <span>Upload Photo</span>
               </div>
             </label>
-            {(profileImage || doctor.profile_image) && (
+            {(profileImage || doctor.imageUrl) && (
               <button 
                 onClick={handleRemoveImage}
                 className="remove-image-button"
@@ -616,6 +636,235 @@ const DoctorDetails = ({ doctorId, setCurrentRoute, setSelectedDoctorId }) => {
                 className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
                 onClick={cancelDeleteTimeSlot}
                 disabled={deleteLoading}
+              >
+                Cancel
+              </button>
+              <button
+                className={`px-4 py-2 text-white rounded-md ${
+                  deleteLoading
+                    ? "bg-red-400 cursor-not-allowed"
+                    : "bg-red-600 hover:bg-red-700"
+                }`}
+                onClick={confirmDeleteTimeSlot}
+                disabled={deleteLoading}
+              >
+                {deleteLoading ? "Deleting..." : "Delete Time Slot"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Schedule Modal */}
+      {isAddingSchedule && (
+        <div
+          className="fixed inset-0 flex items-center justify-center z-50"
+          style={{
+            background: "rgba(0, 0, 0, 0.5)",
+            backdropFilter: "blur(2px)",
+            WebkitBackdropFilter: "blur(2px)",
+          }}
+        >
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <h2 className="text-xl font-semibold mb-4 text-black">
+              Add New Schedule
+            </h2>
+
+            {/* Schedule Input Fields */}
+            <div className="mb-4">
+              <label className="block text-gray-700 mb-2">Select Day</label>
+              <select
+                name="day_of_week"
+                value={newSchedule.day_of_week}
+                onChange={handleScheduleChange}
+                className="w-full px-3 py-2 border rounded-md text-gray-600"
+              >
+                <option value="">Choose a day</option>
+                {days.map((day) => (
+                  <option key={day} value={day}>
+                    {day}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex mb-4 space-x-4">
+              <div className="w-1/2">
+                <label className="block text-gray-700 mb-2">Start Time</label>
+                <input
+                  type="time"
+                  name="start_time"
+                  value={newSchedule.start_time}
+                  onChange={handleScheduleChange}
+                  className="w-full px-3 py-2 border rounded-md text-gray-600"
+                />
+              </div>
+              <div className="w-1/2">
+                <label className="block text-gray-700 mb-2">End Time</label>
+                <input
+                  type="time"
+                  name="end_time"
+                  value={newSchedule.end_time}
+                  onChange={handleScheduleChange}
+                  className="w-full px-3 py-2 border rounded-md text-gray-600"
+                />
+              </div>
+            </div>
+
+            <div className="bg-blue-50 p-4 rounded-md mb-4">
+              <div className="flex items-center mb-2">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 text-blue-400 mr-2"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <span className="text-blue-800 font-medium">Schedule Info</span>
+              </div>
+              <p className="text-blue-600 text-sm">
+                This will add a new time slot to the doctor's schedule.
+              </p>
+            </div>
+
+            {/* Add Schedule Error Message */}
+            {addScheduleError && (
+              <div
+                className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4"
+                role="alert"
+              >
+                <strong className="font-bold">Error: </strong>
+                <span className="block sm:inline">{addScheduleError}</span>
+              </div>
+            )}
+
+            {/* Modal Action Buttons */}
+            <div className="flex justify-between">
+              <button
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
+                onClick={cancelAddSchedule}
+                disabled={addScheduleLoading}
+              >
+                Cancel
+              </button>
+              <button
+                className={`px-4 py-2 text-white rounded-md ${
+                  addScheduleLoading
+                    ? "bg-blue-400 cursor-not-allowed"
+                    : "bg-blue-600 hover:bg-blue-700"
+                }`}
+                onClick={confirmAddSchedule}
+                disabled={addScheduleLoading}
+              >
+                {addScheduleLoading ? "Adding..." : "Add Schedule"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Schedule Modal */}
+      {isEditingSchedule && (
+        <div
+          className="fixed inset-0 flex items-center justify-center z-50"
+          style={{
+            background: "rgba(0, 0, 0, 0.5)",
+            backdropFilter: "blur(2px)",
+            WebkitBackdropFilter: "blur(2px)",
+          }}
+        >
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <h2 className="text-xl font-semibold mb-4 text-black">
+              Update Schedule
+            </h2>
+
+            {/* Schedule Input Fields */}
+            <div className="mb-4">
+              <label className="block text-gray-700 mb-2">Select Day</label>
+              <select
+                name="day_of_week"
+                value={newSchedule.day_of_week}
+                onChange={handleScheduleChange}
+                className="w-full px-3 py-2 border rounded-md text-gray-600"
+              >
+                <option value="">Choose a day</option>
+                {days.map((day) => (
+                  <option key={day} value={day}>
+                    {day}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex mb-4 space-x-4">
+              <div className="w-1/2">
+                <label className="block text-gray-700 mb-2">Start Time</label>
+                <input
+                  type="time"
+                  name="start_time"
+                  value={newSchedule.start_time}
+                  onChange={handleScheduleChange}
+                  className="w-full px-3 py-2 border rounded-md text-gray-600"
+                />
+              </div>
+              <div className="w-1/2">
+                <label className="block text-gray-700 mb-2">End Time</label>
+                <input
+                  type="time"
+                  name="end_time"
+                  value={newSchedule.end_time}
+                  onChange={handleScheduleChange}
+                  className="w-full px-3 py-2 border rounded-md text-gray-600"
+                />
+              </div>
+            </div>
+
+            <div className="bg-blue-50 p-4 rounded-md mb-4">
+              <div className="flex items-center mb-2">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 text-blue-400 mr-2"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <span className="text-blue-800 font-medium">
+                  Schedule Update
+                </span>
+              </div>
+              <p className="text-blue-600 text-sm">
+                This will update the existing time slot in the doctor's
+                schedule.
+              </p>
+            </div>
+
+            {/* Edit Schedule Error Message */}
+            {addScheduleError && (
+              <div
+                className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4"
+                role="alert"
+              >
+                <strong className="font-bold">Error: </strong>
+                <span className="block sm:inline">{addScheduleError}</span>
+              </div>
+            )}
+
+            {/* Modal Action Buttons */}
+            <div className="flex justify-between">
+              <button
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
+                onClick={cancelEditSchedule}
+                disabled={addScheduleLoading}
               >
                 Cancel
               </button>

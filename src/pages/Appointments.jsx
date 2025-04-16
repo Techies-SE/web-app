@@ -258,7 +258,7 @@ const Appointments = () => {
       }
     } catch (error) {
       console.error("Error fetching available time slots:", error);
-      alert(`Failed to load available time slots: ${error.message}`);
+      //alert(`Failed to load available time slots: ${error.message}`);
       setAvailableTimeSlots([]);
     }
   };

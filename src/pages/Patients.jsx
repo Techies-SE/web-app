@@ -16,6 +16,8 @@ import { createPortal } from "react-dom";
 const LabDataUploadPopup = ({ show, onClose, onUpload }) => {
   const [file, setFile] = useState(null);
   const [isDragActive, setIsDragActive] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
   const [singleLabData, setSingleLabData] = useState({
     hn_number: "",
     gender: "",
@@ -35,6 +37,8 @@ const LabDataUploadPopup = ({ show, onClose, onUpload }) => {
     if (show) {
       // Reset file
       setFile(null);
+      setUploadError("");
+      setIsUploading(false);
       const fileInput = document.getElementById("labFileUpload");
       if (fileInput) fileInput.value = "";
 
@@ -58,7 +62,12 @@ const LabDataUploadPopup = ({ show, onClose, onUpload }) => {
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
     if (selectedFile) {
+      if (selectedFile.type !== "text/csv") {
+        setUploadError("Only CSV files are supported.");
+        return;
+      }
       setFile(selectedFile);
+      setUploadError("");
       setSingleLabData({
         hn_number: "",
         gender: "",
@@ -77,6 +86,7 @@ const LabDataUploadPopup = ({ show, onClose, onUpload }) => {
 
   const handleRemoveFile = () => {
     setFile(null);
+    setUploadError("");
     const fileInput = document.getElementById("labFileUpload");
     if (fileInput) fileInput.value = "";
   };
@@ -97,6 +107,7 @@ const LabDataUploadPopup = ({ show, onClose, onUpload }) => {
     const droppedFile = e.dataTransfer.files[0];
     if (droppedFile?.type === "text/csv") {
       setFile(droppedFile);
+      setUploadError("");
       setSingleLabData({
         hn_number: "",
         gender: "",
@@ -110,6 +121,8 @@ const LabDataUploadPopup = ({ show, onClose, onUpload }) => {
         diastolic: "",
         order_date: "",
       });
+    } else {
+      setUploadError("Only CSV files are supported.");
     }
   };
 
@@ -152,26 +165,38 @@ const LabDataUploadPopup = ({ show, onClose, onUpload }) => {
 
   const handleBulkUpload = async () => {
     if (!file) {
-      alert("Please select a file first.");
+      setUploadError("Please select a file first.");
       return;
     }
 
+    setIsUploading(true);
+    setUploadError("");
     const formData = new FormData();
-    formData.append("csvFile", file);
+    formData.append("file", file); // Changed from "csvFile" to "file"
 
     try {
-      const response = await fetch("http://localhost:3000/upload/lab-data", {
-        method: "POST",
-        body: formData,
-      });
+      const response = await fetch(
+        "http://localhost:3000/bulk/upload-lab-results",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
-      const result = await response.text();
-      alert(result || "Upload successful!");
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "Upload failed");
+      }
+
+      alert(result.message || "Upload successful!");
       onUpload(result);
       onClose();
     } catch (error) {
       console.error("Error uploading file:", error);
-      alert("Upload failed.");
+      setUploadError(error.message || "Upload failed. Please try again.");
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -204,6 +229,7 @@ const LabDataUploadPopup = ({ show, onClose, onUpload }) => {
       return;
     }
 
+    setIsUploading(true);
     try {
       const response = await fetch("http://localhost:3000/lab-data", {
         method: "POST",
@@ -213,15 +239,20 @@ const LabDataUploadPopup = ({ show, onClose, onUpload }) => {
         body: JSON.stringify(singleLabData),
       });
 
-      if (!response.ok) throw new Error("Failed to create lab data");
-
       const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "Failed to create lab data");
+      }
+
       alert("Lab data created successfully!");
       onUpload(result);
       onClose();
     } catch (error) {
       console.error("Error creating lab data:", error);
-      alert("Failed to create lab data.");
+      alert("Failed to create lab data: " + (error.message || "Unknown error"));
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -249,7 +280,9 @@ const LabDataUploadPopup = ({ show, onClose, onUpload }) => {
         <div className="overflow-y-auto flex-1 p-4">
           {/* Bulk Upload Section */}
           <div className="container1">
-            <h3 className="text-lg font-semibold mb-3 text-[#242222]">Bulk Upload</h3>
+            <h3 className="text-lg font-semibold mb-3 text-[#242222]">
+              Bulk Upload
+            </h3>
             <div
               className={`border-2 border-dashed rounded-lg p-4 text-center ${
                 isDragActive ? "border-blue-500 bg-blue-50" : "border-gray-300"
@@ -258,7 +291,9 @@ const LabDataUploadPopup = ({ show, onClose, onUpload }) => {
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
             >
-              <p className="mb-2 text-[#969696]">📁 Drop your CSV file here or</p>
+              <p className="mb-2 text-[#969696]">
+                📁 Drop your CSV file here or
+              </p>
               <button
                 className="browse-button"
                 onClick={() => document.getElementById("labFileUpload").click()}
@@ -288,16 +323,25 @@ const LabDataUploadPopup = ({ show, onClose, onUpload }) => {
                 </div>
               )}
             </div>
-            <p className="text-xs text-gray-500 mt-2">Supported formats: CSV</p>
+            <p className="text-xs text-gray-500 mt-2">
+              Supported formats: CSV with columns for hn_number, lab_item_name,
+              and lab_item_value
+            </p>
+
+            {uploadError && (
+              <div className="mt-2 text-red-500 text-sm">{uploadError}</div>
+            )}
           </div>
 
-          <div className="text-center mb-4">
+          {/* <div className="text-center mb-4">
             <span className="text-sm text-gray-500">OR</span>
-          </div>
+          </div> */}
 
-          {/* Single Lab Data Form */}
-          <div className="container1">
-            <h3 className="text-lg font-semibold mb-3 text-[#242222]">Add Single Lab Data</h3>
+          {/* Single Lab Data Form - unchanged from your original code */}
+          {/* <div className="container1">
+            <h3 className="text-lg font-semibold mb-3 text-[#242222]">
+              Add Single Lab Data
+            </h3>
             <div
               className={`space-y-3 ${
                 file ? "opacity-50 cursor-not-allowed" : ""
@@ -305,7 +349,7 @@ const LabDataUploadPopup = ({ show, onClose, onUpload }) => {
             >
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  HN Number (9 digits)
+                  HN Number
                 </label>
                 <input
                   type="text"
@@ -313,81 +357,153 @@ const LabDataUploadPopup = ({ show, onClose, onUpload }) => {
                   placeholder="Enter HN Number"
                   value={singleLabData.hn_number}
                   onChange={handleSingleLabDataChange}
-                  maxLength="9"
-                  className="w-full p-2 border rounded-md text-sm text-[#969696]"
+                  className="w-full p-2 border rounded-md text-sm placeholder-[#969696] text-[#969696]"
                   disabled={!!file}
                 />
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1 ">
-                  Gender
-                </label>
-                <select
-                  name="gender"
-                  value={singleLabData.gender}
-                  onChange={handleSingleLabDataChange}
-                  className="w-full p-2 border rounded-md text-sm text-[#969696]"
-                  disabled={!!file}
-                >
-                  <option value="">Select Gender</option>
-                  <option value="male">male</option>
-                  <option value="female">female</option>
-                </select>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Gender
+                  </label>
+                  <select
+                    name="gender"
+                    value={singleLabData.gender}
+                    onChange={handleSingleLabDataChange}
+                    className="w-full p-2 border rounded-md text-sm text-[#969696]"
+                    disabled={!!file}
+                  >
+                    <option value="">Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Blood Type
+                  </label>
+                  <select
+                    name="blood_type"
+                    value={singleLabData.blood_type}
+                    onChange={handleSingleLabDataChange}
+                    className="w-full p-2 border rounded-md text-sm text-[#969696]"
+                    disabled={!!file}
+                  >
+                    <option value="">Select Blood Type</option>
+                    <option value="A+">A+</option>
+                    <option value="A-">A-</option>
+                    <option value="B+">B+</option>
+                    <option value="B-">B-</option>
+                    <option value="AB+">AB+</option>
+                    <option value="AB-">AB-</option>
+                    <option value="O+">O+</option>
+                    <option value="O-">O-</option>
+                  </select>
+                </div>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1 ">
-                  Blood Type
-                </label>
-                <select
-                  name="blood_type"
-                  value={singleLabData.blood_type}
-                  onChange={handleSingleLabDataChange}
-                  className="w-full p-2 border rounded-md text-sm text-[#969696]"
-                  disabled={!!file}
-                >
-                  <option value="">Select Blood Type</option>
-                  <option value="A+">A+</option>
-                  <option value="A-">A-</option>
-                  <option value="B+">B+</option>
-                  <option value="B-">B-</option>
-                  <option value="O+">O+</option>
-                  <option value="O-">O-</option>
-                  <option value="AB+">AB+</option>
-                  <option value="AB-">AB-</option>
-                </select>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Age
+                  </label>
+                  <input
+                    type="number"
+                    name="age"
+                    placeholder="Enter Age"
+                    value={singleLabData.age}
+                    onChange={handleSingleLabDataChange}
+                    className="w-full p-2 border rounded-md text-sm placeholder-[#969696] text-[#969696]"
+                    disabled={!!file}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Date of Birth
+                  </label>
+                  <input
+                    type="date"
+                    name="date_of_birth"
+                    value={singleLabData.date_of_birth}
+                    onChange={handleSingleLabDataChange}
+                    className="w-full p-2 border rounded-md text-sm text-[#969696]"
+                    disabled={!!file}
+                  />
+                </div>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Age
-                </label>
-                <input
-                  type="number"
-                  name="age"
-                  placeholder="Enter Age"
-                  value={singleLabData.age}
-                  onChange={handleSingleLabDataChange}
-                  className="w-full p-2 border rounded-md text-sm text-[#969696]"
-                  disabled={!!file}
-                />
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Weight (kg)
+                  </label>
+                  <input
+                    type="number"
+                    name="weight"
+                    placeholder="Enter Weight"
+                    value={singleLabData.weight}
+                    onChange={handleSingleLabDataChange}
+                    className="w-full p-2 border rounded-md text-sm placeholder-[#969696] text-[#969696]"
+                    disabled={!!file}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Height (cm)
+                  </label>
+                  <input
+                    type="number"
+                    name="height"
+                    placeholder="Enter Height"
+                    value={singleLabData.height}
+                    onChange={handleSingleLabDataChange}
+                    className="w-full p-2 border rounded-md text-sm placeholder-[#969696] text-[#969696]"
+                    disabled={!!file}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    BMI
+                  </label>
+                  <input
+                    type="text"
+                    name="bmi"
+                    placeholder="Auto-calculated"
+                    value={singleLabData.bmi}
+                    className="w-full p-2 border rounded-md text-sm bg-gray-100 placeholder-[#969696] text-[#969696]"
+                    disabled
+                  />
+                </div>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Date of Birth
-                </label>
-                <input
-                  type="date"
-                  name="date_of_birth"
-                  value={singleLabData.date_of_birth}
-                  onChange={handleSingleLabDataChange}
-                  className="w-full p-2 border rounded-md text-sm text-[#969696]"
-                  disabled={!!file}
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Systolic Pressure
+                  </label>
+                  <input
+                    type="number"
+                    name="systolic"
+                    placeholder="Enter Systolic"
+                    value={singleLabData.systolic}
+                    onChange={handleSingleLabDataChange}
+                    className="w-full p-2 border rounded-md text-sm placeholder-[#969696] text-[#969696]"
+                    disabled={!!file}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Diastolic Pressure
+                  </label>
+                  <input
+                    type="number"
+                    name="diastolic"
+                    placeholder="Enter Diastolic"
+                    value={singleLabData.diastolic}
+                    onChange={handleSingleLabDataChange}
+                    className="w-full p-2 border rounded-md text-sm placeholder-[#969696] text-[#969696]"
+                    disabled={!!file}
+                  />
+                </div>
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Order Date
@@ -401,107 +517,38 @@ const LabDataUploadPopup = ({ show, onClose, onUpload }) => {
                   disabled={!!file}
                 />
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Weight (kg)
-                </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  name="weight"
-                  placeholder="Enter Weight"
-                  value={singleLabData.weight}
-                  onChange={handleSingleLabDataChange}
-                  className="w-full p-2 border rounded-md text-sm text-[#969696]"
-                  disabled={!!file}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Height (cm)
-                </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  name="height"
-                  placeholder="Enter Height"
-                  value={singleLabData.height}
-                  onChange={handleSingleLabDataChange}
-                  className="w-full p-2 border rounded-md text-sm text-[#969696]"
-                  disabled={!!file}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  BMI (auto-calculated)
-                </label>
-                <input
-                  type="number"
-                  name="bmi"
-                  value={singleLabData.bmi}
-                  className="w-full p-2 border rounded-md text-sm bg-gray-100"
-                  disabled
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Systolic
-                </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  name="systolic"
-                  placeholder="Enter Systolic"
-                  value={singleLabData.systolic}
-                  onChange={handleSingleLabDataChange}
-                  className="w-full p-2 border rounded-md text-sm text-[#969696]"
-                  disabled={!!file}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Diastolic
-                </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  name="diastolic"
-                  placeholder="Enter Diastolic"
-                  value={singleLabData.diastolic}
-                  onChange={handleSingleLabDataChange}
-                  className="w-full p-2 border rounded-md text-sm text-[#969696]"
-                  disabled={!!file}
-                />
-              </div>
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* Footer */}
-        <div className="border-t p-4 flex justify-end space-x-3">
+        {/*border-t*/}
+        <div className="p-4 flex justify-end space-x-3">
           {file ? (
             <button
               onClick={handleBulkUpload}
-              className="bg-green-500 text-white px-4 py-2 rounded text-sm hover:bg-green-600"
+              className={`bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-600 ${
+                isUploading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+              disabled={isUploading}
             >
-              Upload CSV
+              {isUploading ? "Uploading..." : "Upload CSV"}
             </button>
           ) : isFormFilled ? (
             <button
               onClick={handleSingleLabDataSubmit}
-              className="bg-green-500 text-white px-4 py-2 rounded text-sm hover:bg-green-600"
+              className={`bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-600 ${
+                isUploading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+              disabled={isUploading}
             >
-              Add Lab Data
+              {isUploading ? "Uploading..." : "Add Lab Data"}
             </button>
           ) : null}
           <button
             onClick={onClose}
-            className="bg-red-500 text-white px-4 py-2 rounded text-sm hover:bg-red-600"
+            className="cancel-button"
+            disabled={isUploading}
           >
             Cancel
           </button>
@@ -519,8 +566,10 @@ const PatientUploadPopup = ({ show, onClose, onUpload }) => {
     citizen_id: "",
     phone_no: "",
     doctor_id: "",
+    lab_test_master_id: "",
   });
   const [doctors, setDoctors] = useState([]);
+  const [labTests, setLabTests] = useState([]);
   const [isDragActive, setIsDragActive] = useState(false);
 
   // Fetch doctors when the component mounts
@@ -536,7 +585,19 @@ const PatientUploadPopup = ({ show, onClose, onUpload }) => {
       }
     };
 
+    const fetchLabTests = async () => {
+      try {
+        const response = await fetch("http://localhost:3000/lab-tests");
+        if (!response.ok) throw new Error("Failed to fetch lab tests");
+        const data = await response.json();
+        setLabTests(data);
+      } catch (error) {
+        console.error("Error fetching lab tests:", error);
+      }
+    };
+
     fetchDoctors(); // Call the fetch function when the component mounts
+    fetchLabTests();
   }, []); // Empty dependency array means this runs once when the component mounts
 
   // Reset all fields when popup is shown
@@ -554,6 +615,7 @@ const PatientUploadPopup = ({ show, onClose, onUpload }) => {
         citizen_id: "",
         phone_no: "",
         doctor_id: "",
+        lab_test_master_id: "",
       });
     }
   }, [show]);
@@ -568,6 +630,7 @@ const PatientUploadPopup = ({ show, onClose, onUpload }) => {
         citizen_id: "",
         phone_no: "",
         doctor_id: "",
+        lab_test_master_id: "",
       });
     }
   };
@@ -601,7 +664,8 @@ const PatientUploadPopup = ({ show, onClose, onUpload }) => {
         name: "",
         citizen_id: "",
         phone_no: "",
-        doctor: "",
+        doctor_id: "",
+        lab_test_master_id: "",
       });
     }
   };
@@ -647,7 +711,8 @@ const PatientUploadPopup = ({ show, onClose, onUpload }) => {
       !singlePatient.name ||
       !singlePatient.citizen_id ||
       !singlePatient.phone_no ||
-      !singlePatient.doctor_id // Add this line
+      !singlePatient.doctor_id || // Add this line
+      !singlePatient.lab_test_master_id
     ) {
       alert("Please fill in all required fields.");
       return;
@@ -701,7 +766,9 @@ const PatientUploadPopup = ({ show, onClose, onUpload }) => {
         <div className="overflow-y-auto flex-1 p-4">
           {/* Bulk Upload Section */}
           <div className="container1">
-            <h3 className="text-lg font-semibold mb-3 text-[#242222]">Bulk Upload</h3>
+            <h3 className="text-lg font-semibold mb-3 text-[#242222]">
+              Bulk Upload
+            </h3>
             <div
               className={`border-2 border-dashed rounded-lg p-4 text-center ${
                 isDragActive ? "border-blue-500 bg-blue-50" : "border-gray-300"
@@ -710,7 +777,9 @@ const PatientUploadPopup = ({ show, onClose, onUpload }) => {
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
             >
-              <p className="mb-2 text-[#242222]">📁 Drop your CSV file here or</p>
+              <p className="mb-2 text-[#242222]">
+                📁 Drop your CSV file here or
+              </p>
               <button
                 className="browse-button"
                 onClick={() => document.getElementById("fileUpload").click()}
@@ -749,7 +818,9 @@ const PatientUploadPopup = ({ show, onClose, onUpload }) => {
 
           {/* Single Patient Form */}
           <div className="container1">
-            <h3 className="text-lg font-semibold mb-3 text-[#242222]">Add A Single Patient</h3>
+            <h3 className="text-lg font-semibold mb-3 text-[#242222]">
+              Add A Single Patient
+            </h3>
             <div
               className={`space-y-3 ${
                 file ? "opacity-50 cursor-not-allowed" : ""
@@ -823,15 +894,30 @@ const PatientUploadPopup = ({ show, onClose, onUpload }) => {
                   disabled={!!file}
                 >
                   <option value="">Select Doctor</option>
-                  {doctors.map(
-                    (
-                      doctor // Populating the dropdown with fetched doctors' IDs
-                    ) => (
-                      <option key={doctor.id} value={doctor.id}>
-                        {doctor.id}
-                      </option> // Displaying doctor ID
-                    )
-                  )}
+                  {doctors.map((doctor) => (
+                    <option key={doctor.id} value={doctor.id}>
+                      {doctor.name}
+                    </option> // Display doctor name instead of ID
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Lab Test
+                </label>
+                <select
+                  name="lab_test_master_id"
+                  value={singlePatient.lab_test_master_id}
+                  onChange={handleSinglePatientChange}
+                  className="w-full p-2 border rounded-md text-sm text-[#969696]"
+                  disabled={!!file}
+                >
+                  <option value="">Select Lab Test</option>
+                  {labTests.map((test) => (
+                    <option key={test.id} value={test.id}>
+                      {test.test_name}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -839,11 +925,11 @@ const PatientUploadPopup = ({ show, onClose, onUpload }) => {
         </div>
 
         {/* Footer - Fixed */}
-        <div className="border-t p-4 flex justify-end space-x-3">
+        <div className="p-4 flex justify-end space-x-3">
           {file ? (
             <button
               onClick={handleBulkUpload}
-              className="bg-green-500 text-white px-4 py-2 rounded text-sm hover:bg-green-600"
+              className="bg-green-600 text-white px-4 py-2 rounded text-sm"
             >
               Upload CSV
             </button>
@@ -1179,7 +1265,10 @@ const Patients = ({ onNavigateToDetails = () => {} }) => {
                       (sortConfig.direction === "ascending" ? (
                         <ChevronUp size={16} className="ml-1 text-[#595959]" />
                       ) : (
-                        <ChevronDown size={16} className="ml-1 text-[#595959]" />
+                        <ChevronDown
+                          size={16}
+                          className="ml-1 text-[#595959]"
+                        />
                       ))}
                   </div>
                 </th>
@@ -1204,9 +1293,15 @@ const Patients = ({ onNavigateToDetails = () => {} }) => {
                    border-b border-gray-300
                 `}
                 >
-                  <td className="p-4 text-start text-[#595959]">{patient.hn_number}</td>
-                  <td className="p-4 text-start text-[#595959]">{patient.name}</td>
-                  <td className="p-4 text-start text-[#595959]">{patient.phone_no}</td>
+                  <td className="p-4 text-start text-[#595959]">
+                    {patient.hn_number}
+                  </td>
+                  <td className="p-4 text-start text-[#595959]">
+                    {patient.name}
+                  </td>
+                  <td className="p-4 text-start text-[#595959]">
+                    {patient.phone_no}
+                  </td>
                   <td className="p-4 text-start text-[#595959]">
                     <StatusIcon type="lab" status={patient.lab_data_status} />
                   </td>

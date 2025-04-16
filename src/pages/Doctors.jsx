@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { createPortal } from "react-dom";
 
-const Doctors = ({setSelectedDoctorId}) => {
+const Doctors = ({ setSelectedDoctorId }) => {
   const [doctors, setDoctors] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
@@ -32,6 +32,7 @@ const Doctors = ({setSelectedDoctorId}) => {
     key: "doctor_name",
     direction: "ascending",
   });
+  const [departments, setDepartments] = useState([]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -48,6 +49,7 @@ const Doctors = ({setSelectedDoctorId}) => {
   }, []);
 
   useEffect(() => {
+    // Fetch doctors (your existing code)
     fetch("http://localhost:3000/doctors-with-departments")
       .then((response) => response.json())
       .then((data) => {
@@ -55,6 +57,15 @@ const Doctors = ({setSelectedDoctorId}) => {
         setDoctors(data);
       })
       .catch((error) => console.error("Error fetching doctors data:", error));
+
+    // Add this new fetch for departments
+    fetch("http://localhost:3000/departments")
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Fetched departments:", data);
+        setDepartments(data);
+      })
+      .catch((error) => console.error("Error fetching departments:", error));
   }, []);
 
   const handleInputChange = (e) => {
@@ -482,9 +493,9 @@ const Doctors = ({setSelectedDoctorId}) => {
                   required
                 >
                   <option value="">Select Department</option>
-                  {[...Array(10).keys()].map((num) => (
-                    <option key={num + 1} value={num + 1}>
-                      Department {num + 1}
+                  {departments.map((department) => (
+                    <option key={department.id} value={department.id}>
+                      {department.name}
                     </option>
                   ))}
                 </select>
