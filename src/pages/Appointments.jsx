@@ -553,11 +553,11 @@
 //         <div className="fixed inset-0 flex items-center justify-center z-50">
 //           <div
 //             className="absolute inset-0"
-//             style={{
-//               background: "rgba(0, 0, 0, 0.5)",
-//               backdropFilter: "blur(2px)",
-//               WebkitBackdropFilter: "blur(2px)",
-//             }}
+            // style={{
+            //   background: "rgba(0, 0, 0, 0.5)",
+            //   backdropFilter: "blur(2px)",
+            //   WebkitBackdropFilter: "blur(2px)",
+            // }}
 //           ></div>
 //           <div className="bg-white rounded-lg shadow-lg w-full max-w-md z-10">
 //             {/* Modal Header */}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Search,
   Filter,
@@ -6,18 +6,29 @@ import {
   ChevronDown,
   Eye,
   Trash2,
-  X
+  X,
+  Upload,
+  User,
+  Mail,
+  Phone,
+  Award,
 } from "lucide-react";
 
 const Settings = () => {
   const [departments, setDepartments] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedDepartment, setSelectedDepartment] = useState(null);
+  const [departmentDetails, setDepartmentDetails] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isImageUploading, setIsImageUploading] = useState(false);
   const [newDepartment, setNewDepartment] = useState({
     name: "",
     description: "",
-    status: "active"
   });
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const departmentsPerPage = 10;
   const [sortConfig, setSortConfig] = useState({
@@ -25,79 +36,210 @@ const Settings = () => {
     direction: "ascending",
   });
 
-  // Sample staff counts for departments
-  const staffCounts = {
-    "Cardiology": 15,
-    "Neurology": 12,
-    "Pulmonology": 8,
-    "Gastroenterology": 10,
-    "Endocrinology": 7,
-    "Nephrology": 9,
-    "Hematology": 6,
-    "Rheumatology": 8,
-    "Dermatology": 11,
-    "Psychiatry": 14
+  // Sample descriptions for departments (fallback if API returns null)
+  const fallbackDescriptions = {
+    Cardiology: "Diagnosis and treatment of heart diseases",
+    Neurology: "Diagnosis and treatment of nervous system disorders",
+    Pulmonology: "Treatment of respiratory tract diseases",
+    Gastroenterology: "Diagnosis of digestive system disorders",
+    Endocrinology: "Treatment of hormone-related conditions",
+    Nephrology: "Diagnosis and treatment of kidney diseases",
+    Hematology: "Study and treatment of blood disorders",
+    Rheumatology: "Treatment of autoimmune diseases",
+    Dermatology: "Diagnosis and treatment of skin conditions",
+    Psychiatry: "Treatment of mental health disorders",
   };
 
-  // Sample descriptions for departments
-  const descriptions = {
-    "Cardiology": "Diagnosis and treatment of heart diseases",
-    "Neurology": "Diagnosis and treatment of nervous system disorders",
-    "Pulmonology": "Treatment of respiratory tract diseases",
-    "Gastroenterology": "Diagnosis of digestive system disorders",
-    "Endocrinology": "Treatment of hormone-related conditions",
-    "Nephrology": "Diagnosis and treatment of kidney diseases",
-    "Hematology": "Study and treatment of blood disorders",
-    "Rheumatology": "Treatment of autoimmune diseases",
-    "Dermatology": "Diagnosis and treatment of skin conditions",
-    "Psychiatry": "Treatment of mental health disorders"
+  // Function to fetch departments
+  const fetchDepartments = () => {
+    fetch("http://localhost:3000/departments/doctor-counts")
+      .then((response) => response.json())
+      .then((responseData) => {
+        if (responseData.success && Array.isArray(responseData.data)) {
+          console.log("Fetched department doctor counts:", responseData.data);
+          // Map the data to our expected format
+          const enhancedData = responseData.data.map((dept) => ({
+            id: dept.department_id,
+            name: dept.department_name,
+            description:
+              dept.description ||
+              fallbackDescriptions[dept.department_name] ||
+              "Department description",
+            doctor_count: dept.doctor_count,
+            image: dept.image,
+          }));
+          setDepartments(enhancedData);
+        } else {
+          console.error("Invalid response format:", responseData);
+        }
+      })
+      .catch((error) =>
+        console.error("Error fetching departments data:", error)
+      );
   };
 
   useEffect(() => {
-    // Fetch departments
-    fetch("http://localhost:3000/departments")
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("Fetched departments:", data);
-        // Add description and staff count to each department
-        const enhancedData = data.map(department => ({
-          ...department,
-          description: descriptions[department.name] || "Department description",
-          staff_count: staffCounts[department.name] || Math.floor(Math.random() * 15) + 5,
-          status: "active"
-        }));
-        setDepartments(enhancedData);
-      })
-      .catch((error) => console.error("Error fetching departments data:", error));
+
+    // Fetch departments with doctor counts
+    fetchDepartments();
   }, []);
+
+  useEffect(() => {
+    if (departmentDetails?.image && showDetailModal) {
+      // Be more specific to target the department image
+      const imgElement = document.querySelector(".department-image");
+      if (imgElement) {
+        console.log("Image dimensions check:", imgElement.getBoundingClientRect());
+        console.log("Image natural dimensions:", {
+          naturalWidth: imgElement.naturalWidth,
+          naturalHeight: imgElement.naturalHeight
+        });
+      }
+    }
+  }, [departmentDetails, showDetailModal]);
 
   const handleInputChange = (e) => {
     setNewDepartment({ ...newDepartment, [e.target.name]: e.target.value });
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+
+      // Create a preview URL
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Handle image upload for existing department
+  const handleDepartmentImageUpload = (departmentId, file) => {
+    if (!file) return;
+
+    setIsImageUploading(true);
+
+    const formData = new FormData();
+    formData.append("image", file);
+
+    fetch(`http://localhost:3000/departments/image/upload/${departmentId}`, {
+      method: "PATCH",
+      body: formData,
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Image upload successful, response:", data);
+
+        // Use whichever URL is available, with preference for the full URL
+        const imageUrl = data.imageUrl || data.image;
+
+        // Ensure we have a full URL
+        const fullImageUrl = imageUrl.startsWith("http")
+          ? imageUrl
+          : `http://localhost:3000/${
+              imageUrl.startsWith("/") ? imageUrl.substring(1) : imageUrl
+            }`;
+
+        console.log("Setting new image URL:", fullImageUrl);
+
+        // Update both state values with the same full URL
+        setDepartmentDetails((prevDetails) => ({
+          ...prevDetails,
+          image: fullImageUrl,
+          imageUrl: fullImageUrl,
+        }));
+
+        setDepartments((prevDepartments) =>
+          prevDepartments.map((dept) =>
+            dept.id === departmentId ? { ...dept, image: fullImageUrl } : dept
+          )
+        );
+
+        setIsImageUploading(false);
+        alert("Department image updated successfully");
+      })
+      .catch((error) => {
+        console.error("Error uploading department image:", error);
+        setIsImageUploading(false);
+        alert("Failed to upload department image. Please try again.");
+      });
+  };
+
+  // Handle image deletion for department
+  const deleteDepartmentImage = (departmentId) => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to remove this department image?"
+    );
+    if (!confirmDelete) return;
+
+    setIsImageUploading(true);
+
+    fetch(`http://localhost:3000/departments/image/delete/${departmentId}`, {
+      method: "DELETE",
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Image deletion successful:", data);
+
+        // Update the department details with no image
+        setDepartmentDetails({
+          ...departmentDetails,
+          image: null,
+        });
+
+        // Also update the department in the departments list
+        setDepartments(
+          departments.map((dept) =>
+            dept.id === departmentId ? { ...dept, image: null } : dept
+          )
+        );
+
+        setIsImageUploading(false);
+
+        // Show success message
+        alert("Department image removed successfully");
+      })
+      .catch((error) => {
+        console.error("Error deleting department image:", error);
+        setIsImageUploading(false);
+        alert("Failed to remove department image. Please try again.");
+      });
+  };
+
   const handleFormSubmit = (e) => {
     e.preventDefault();
+
+    // Create FormData object to handle file upload
+    const formData = new FormData();
+    formData.append("name", newDepartment.name);
+    formData.append("description", newDepartment.description);
+
+    if (imageFile) {
+      formData.append("image", imageFile);
+    }
+
     fetch("http://localhost:3000/departments", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: newDepartment.name, image: null }),
+      body: formData, // No need to set Content-Type header, it's set automatically with FormData
     })
       .then((response) => response.json())
       .then((createdDepartment) => {
-        // Add the new department with enhanced data
+        // Add the new department with doctor count of 0
         const enhancedDepartment = {
           ...createdDepartment,
-          description: newDepartment.description,
-          staff_count: Math.floor(Math.random() * 15) + 5,
-          status: newDepartment.status
+          doctor_count: 0,
         };
         setDepartments([...departments, enhancedDepartment]);
         setShowModal(false);
         setNewDepartment({
           name: "",
           description: "",
-          status: "active"
         });
+        setImageFile(null);
+        setImagePreview(null);
       })
       .catch((error) => console.error("Error adding department:", error));
   };
@@ -189,9 +331,39 @@ const Settings = () => {
     );
   };
 
+  // Update the handleViewDetails function to use the imageUrl
   const handleViewDetails = (department) => {
-    console.log("View details for department:", department);
-    // You would implement navigation or modal to show details
+    setSelectedDepartment(department);
+    setIsLoading(true);
+
+    // Fetch department details including doctors
+    fetch(`http://localhost:3000/departments/${department.id}`)
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Department details:", data);
+
+        // Always prioritize the full URL if available
+        if (data.imageUrl) {
+          // Use the full URL directly
+          data.image = data.imageUrl;
+        }
+        // If only a relative path is provided, construct the full URL
+        else if (data.image && !data.image.startsWith("http")) {
+          data.image = `http://localhost:3000/${
+            data.image.startsWith("/") ? data.image.substring(1) : data.image
+          }`;
+        }
+
+        console.log("Final image URL set:", data.image);
+        setDepartmentDetails(data);
+        setShowDetailModal(true);
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        console.error("Error fetching department details:", error);
+        setIsLoading(false);
+        alert("Failed to fetch department details.");
+      });
   };
 
   const handleDeleteDepartment = (departmentId) => {
@@ -246,10 +418,9 @@ const Settings = () => {
           <thead>
             <tr className="hover:bg-gray-50 bg-gray-100 text-[#242222]">
               {[
-                { key: "name", label: "Department Name", width: "20%" },
-                { key: "description", label: "Description", width: "30%" },
-                { key: "staff_count", label: "Staff Count", width: "15%" },
-                { key: "status", label: "Status", width: "15%" },
+                { key: "name", label: "Department Name", width: "25%" },
+                { key: "description", label: "Description", width: "45%" },
+                { key: "doctor_count", label: "Doctor Count", width: "15%" },
               ].map((column) => (
                 <th
                   key={column.key}
@@ -271,13 +442,15 @@ const Settings = () => {
                   </div>
                 </th>
               ))}
-              <th className="p-4 text-left">Action</th>
+              <th className="p-4 text-left" style={{ width: "15%" }}>
+                Action
+              </th>
             </tr>
           </thead>
           <tbody>
             {currentDepartments.length === 0 ? (
               <tr>
-                <td colSpan="5" className="text-center p-8 text-gray-500">
+                <td colSpan="4" className="text-center p-8 text-gray-500">
                   There's no department yet.
                 </td>
               </tr>
@@ -294,10 +467,7 @@ const Settings = () => {
                     {department.description}
                   </td>
                   <td className="p-4 text-start text-[#595959]">
-                    {department.staff_count}
-                  </td>
-                  <td className="p-4 text-start text-[#595959]">
-                    {department.status}
+                    {department.doctor_count}
                   </td>
                   <td className="p-4 flex items-center space-x-3">
                     <Eye
@@ -352,6 +522,7 @@ const Settings = () => {
         </button>
       </div>
 
+      {/* Create Department Modal */}
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-container">
@@ -385,22 +556,308 @@ const Settings = () => {
                 />
               </div>
               <div className="form-group text-[#242222]">
-                <label>Status</label>
-                <select
-                  name="status"
-                  value={newDepartment.status}
-                  onChange={handleInputChange}
-                  required
-                >
-                  <option value="">Select Status</option>
-                  <option value="active">active</option>
-                  <option value="inactive">inactive</option>
-                </select>
+                <label>Department Image</label>
+                <div className="image-upload-container">
+                  <input
+                    type="file"
+                    id="department-image"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
+                  />
+                  <label
+                    htmlFor="department-image"
+                    className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-md cursor-pointer hover:bg-gray-50"
+                  >
+                    {imagePreview ? (
+                      <div className="relative w-full h-full">
+                        <img
+                          src={imagePreview}
+                          alt="Department preview"
+                          className="w-full h-full object-contain"
+                        />
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setImagePreview(null);
+                            setImageFile(null);
+                          }}
+                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <Upload size={24} className="text-gray-400 mb-2" />
+                        <span className="text-sm text-gray-500">
+                          Click or drag image to upload
+                        </span>
+                      </>
+                    )}
+                  </label>
+                </div>
               </div>
               <button type="submit" className="submit-btn">
                 Create Department
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Department Details Modal */}
+      {showDetailModal && departmentDetails && (
+        <div
+          className="fixed inset-0 flex items-center justify-center z-50 p-4"
+          style={{
+            background: "rgba(0, 0, 0, 0.5)",
+            backdropFilter: "blur(2px)",
+            WebkitBackdropFilter: "blur(2px)",
+          }}
+        >
+          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            {/* Header */}
+            <div className="px-6 py-4 border-b flex justify-between items-center bg-gray-50">
+              <h2 className="text-xl font-semibold text-gray-800">
+                Department Details
+              </h2>
+              <button
+                onClick={() => setShowDetailModal(false)}
+                className="p-1 rounded-full hover:bg-gray-200 transition-colors"
+                aria-label="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 overflow-y-auto flex-grow">
+              {isLoading ? (
+                <div className="flex justify-center items-center h-40">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-8 h-8 border-4 border-t-teal-500 border-gray-200 rounded-full animate-spin"></div>
+                    <span className="text-gray-500">
+                      Loading department details...
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* Department Header */}
+                  <div className="flex items-start mb-8 gap-6">
+                    {/* Department Image with Upload Option */}
+                    <div className="flex-shrink-0">
+                      <div className="relative group">
+                        {isImageUploading ? (
+                          <div className="w-28 h-28 bg-gray-100 rounded-lg shadow-sm flex items-center justify-center">
+                            <div className="w-6 h-6 border-2 border-t-teal-500 border-gray-200 rounded-full animate-spin"></div>
+                          </div>
+                        ) : departmentDetails.image ? (
+                          <>
+                            {console.log(
+                              "Rendering image with src:",
+                              departmentDetails.image
+                            )}
+                            <img
+                              src={
+                                departmentDetails.imageUrl ||
+                                (departmentDetails.image &&
+                                departmentDetails.image.startsWith("http")
+                                  ? departmentDetails.image
+                                  : departmentDetails.image
+                                  ? `http://localhost:3000/${
+                                      departmentDetails.image.startsWith("/")
+                                        ? departmentDetails.image.substring(1)
+                                        : departmentDetails.image
+                                    }`
+                                  : "/api/placeholder/120/120")
+                              }
+                              alt={departmentDetails.name}
+                              className="w-40 h-40 object-contain rounded-lg shadow-sm"
+                              onLoad={() =>
+                                console.log(
+                                  "✅ Image loaded successfully:",
+                                  departmentDetails.imageUrl ||
+                                    departmentDetails.image
+                                )
+                              }
+                              onError={(e) => {
+                                console.error(
+                                  "❌ Image failed to load:",
+                                  departmentDetails.imageUrl ||
+                                    departmentDetails.image
+                                );
+                                e.target.onerror = null;
+                                e.target.src = "/api/placeholder/120/120";
+                              }}
+                            />
+                          </>
+                        ) : (
+                          <div className="w-28 h-28 bg-gray-100 rounded-lg shadow-sm flex items-center justify-center">
+                            <span className="text-gray-400 text-xs">
+                              No Image
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Image Upload Overlay - Only show if not currently uploading */}
+                        {!isImageUploading && (
+                          <label
+                            htmlFor="department-image-upload"
+                            className="absolute inset-0 bg-opacity-0 group-hover:bg-opacity-50 flex items-center justify-center rounded-lg cursor-pointer transition-all duration-200"
+                          >
+                            <div className="opacity-0 group-hover:opacity-100 text-white flex flex-col items-center transition-opacity duration-200">
+                              <Upload size={20} className="mb-1" />
+                              <span className="text-xs font-medium">
+                                Update Image
+                              </span>
+                            </div>
+                          </label>
+                        )}
+                        <input
+                          type="file"
+                          id="department-image-upload"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files[0];
+                            if (file) {
+                              handleDepartmentImageUpload(
+                                departmentDetails.id,
+                                file
+                              );
+                            }
+                          }}
+                          disabled={isImageUploading}
+                        />
+                      </div>
+                      {departmentDetails.image && !isImageUploading && (
+                        <button
+                          className="mt-2 text-xs text-teal-600 hover:text-teal-800 flex items-center justify-center w-full"
+                          onClick={() =>
+                            deleteDepartmentImage(departmentDetails.id)
+                          }
+                        >
+                          <Trash2 size={12} className="mr-1" />
+                          Remove Image
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Department Info */}
+                    <div className="flex-grow">
+                      <h3 className="text-2xl font-bold text-gray-800 mb-2">
+                        {departmentDetails.name}
+                      </h3>
+                      <p className="text-gray-600 mb-4">
+                        {departmentDetails.description ||
+                          "No description available"}
+                      </p>
+                      <div className="flex gap-4">
+                        <div className="px-3 py-1 bg-gray-100 rounded-full text-sm text-gray-600 flex items-center">
+                          <span className="font-medium mr-1">ID:</span>{" "}
+                          {departmentDetails.id}
+                        </div>
+                        <div className="px-3 py-1 bg-teal-50 rounded-full text-sm text-teal-700 flex items-center">
+                          <User size={14} className="mr-1" />
+                          <span className="font-medium mr-1">
+                            Doctors:
+                          </span>{" "}
+                          {departmentDetails.doctors
+                            ? departmentDetails.doctors.length
+                            : 0}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Doctors Section */}
+                  <div className="mt-8">
+                    <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                      <User size={18} className="mr-2 text-teal-600" />
+                      Doctors in Department
+                    </h4>
+
+                    {departmentDetails.doctors &&
+                    departmentDetails.doctors.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {departmentDetails.doctors.map((doctor, index) => (
+                          <div
+                            key={index}
+                            className="border border-gray-200 rounded-lg p-5 hover:shadow-md transition-all duration-200 bg-white group"
+                          >
+                            <p className="font-semibold text-gray-800 mb-3 text-lg group-hover:text-teal-600 transition-colors">
+                              {doctor.name}
+                            </p>
+
+                            <div className="space-y-2 text-sm">
+                              <p className="text-gray-700 flex items-center">
+                                <Award
+                                  size={14}
+                                  className="mr-2 text-teal-500 flex-shrink-0"
+                                />
+                                <span className="text-gray-500 mr-1">
+                                  Specialization:
+                                </span>{" "}
+                                {doctor.specialization}
+                              </p>
+
+                              <p className="text-gray-700 flex items-center">
+                                <Mail
+                                  size={14}
+                                  className="mr-2 text-teal-500 flex-shrink-0"
+                                />
+                                <span className="text-gray-500 mr-1">
+                                  Email:
+                                </span>
+                                <a
+                                  href={`mailto:${doctor.email}`}
+                                  className="text-teal-600 hover:underline"
+                                >
+                                  {doctor.email}
+                                </a>
+                              </p>
+
+                              <p className="text-gray-700 flex items-center">
+                                <Phone
+                                  size={14}
+                                  className="mr-2 text-teal-500 flex-shrink-0"
+                                />
+                                <span className="text-gray-500 mr-1">
+                                  Phone:
+                                </span>{" "}
+                                {doctor.phone_no}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center p-8 border border-dashed border-gray-300 rounded-lg bg-gray-50">
+                        <div className="text-gray-400 mb-2">
+                          <User size={24} className="mx-auto mb-2" />
+                        </div>
+                        <p className="text-gray-500">
+                          No doctors assigned to this department.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 border-t bg-gray-50 flex justify-end">
+              <button
+                onClick={() => setShowDetailModal(false)}
+                className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-opacity-50 transition-all"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
