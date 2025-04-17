@@ -5,3 +5,4 @@ export { default as Doctors } from './Doctors';
 export { default as Staffs } from './Staffs';
 export { default as Settings } from './Settings';
 export { default as DoctorDetails } from './doctor_details';
+export {default as Schedules} from './Scedules';

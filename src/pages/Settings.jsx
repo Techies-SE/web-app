@@ -12,6 +12,7 @@ import {
   Mail,
   Phone,
   Award,
+  PlusIcon
 } from "lucide-react";
 
 const Settings = () => {
@@ -79,7 +80,6 @@ const Settings = () => {
   };
 
   useEffect(() => {
-
     // Fetch departments with doctor counts
     fetchDepartments();
   }, []);
@@ -89,10 +89,13 @@ const Settings = () => {
       // Be more specific to target the department image
       const imgElement = document.querySelector(".department-image");
       if (imgElement) {
-        console.log("Image dimensions check:", imgElement.getBoundingClientRect());
+        console.log(
+          "Image dimensions check:",
+          imgElement.getBoundingClientRect()
+        );
         console.log("Image natural dimensions:", {
           naturalWidth: imgElement.naturalWidth,
-          naturalHeight: imgElement.naturalHeight
+          naturalHeight: imgElement.naturalHeight,
         });
       }
     }
@@ -209,10 +212,10 @@ const Settings = () => {
       });
   };
 
-  const handleFormSubmit = (e) => {
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true); // Show loading state
 
-    // Create FormData object to handle file upload
     const formData = new FormData();
     formData.append("name", newDepartment.name);
     formData.append("description", newDepartment.description);
@@ -221,27 +224,37 @@ const Settings = () => {
       formData.append("image", imageFile);
     }
 
-    fetch("http://localhost:3000/departments", {
-      method: "POST",
-      body: formData, // No need to set Content-Type header, it's set automatically with FormData
-    })
-      .then((response) => response.json())
-      .then((createdDepartment) => {
-        // Add the new department with doctor count of 0
-        const enhancedDepartment = {
-          ...createdDepartment,
-          doctor_count: 0,
-        };
-        setDepartments([...departments, enhancedDepartment]);
-        setShowModal(false);
-        setNewDepartment({
-          name: "",
-          description: "",
-        });
-        setImageFile(null);
-        setImagePreview(null);
-      })
-      .catch((error) => console.error("Error adding department:", error));
+    try {
+      const response = await fetch("http://localhost:3000/departments", {
+        method: "POST",
+        body: formData, // FormData will automatically set Content-Type to multipart/form-data
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const createdDepartment = await response.json();
+
+      // Add the new department with doctor count of 0
+      const enhancedDepartment = {
+        ...createdDepartment.department,
+        doctor_count: 0,
+        image: createdDepartment.department.image, // Use the full URL from response
+      };
+
+      setDepartments([...departments, enhancedDepartment]);
+      setShowModal(false);
+      setNewDepartment({ name: "", description: "" });
+      setImageFile(null);
+      setImagePreview(null);
+      alert("Department created successfully!");
+    } catch (error) {
+      console.error("Error adding department:", error);
+      alert(`Failed to create department: ${error.message}`);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Sorting function
@@ -392,7 +405,7 @@ const Settings = () => {
         <h1 className="text-black">Department Info</h1>
         <div className="flex gap-4">
           <button onClick={() => setShowModal(true)} className="uButton">
-            + New Department
+            + Department
           </button>
         </div>
       </div>
@@ -469,12 +482,16 @@ const Settings = () => {
                   <td className="p-4 text-start text-[#595959]">
                     {department.doctor_count}
                   </td>
-                  <td className="p-4 flex items-center space-x-3">
+                  <td className="p-4 flex items-center space-x-5">
                     <Eye
                       size={20}
                       className="cursor-pointer text-[#3BA092] hover:text-[#2A7E6C]"
                       onClick={() => handleViewDetails(department)}
                       title="View Details"
+                    />
+                    <PlusIcon
+                    size={20}
+                    className="cursor-pointer text-blue-800 hover:text-blue-900"
                     />
                     <Trash2
                       size={20}
@@ -567,40 +584,83 @@ const Settings = () => {
                   />
                   <label
                     htmlFor="department-image"
-                    className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-md cursor-pointer hover:bg-gray-50"
+                    className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-md cursor-pointer hover:bg-gray-50 relative"
                   >
                     {imagePreview ? (
-                      <div className="relative w-full h-full">
+                      <>
                         <img
                           src={imagePreview}
                           alt="Department preview"
-                          className="w-full h-full object-contain"
+                          className="w-full h-full object-cover rounded-md"
                         />
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setImagePreview(null);
-                            setImageFile(null);
-                          }}
-                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                        >
-                          <X size={16} />
-                        </button>
-                      </div>
+                        <div className="absolute inset-0 bg-opacity-0 hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
+                          <div className="opacity-0 hover:opacity-100 text-white flex flex-col items-center">
+                            <Upload size={24} className="mb-1" />
+                            <span className="text-xs">Change Image</span>
+                          </div>
+                        </div>
+                      </>
                     ) : (
-                      <>
+                      <div className="flex flex-col items-center">
                         <Upload size={24} className="text-gray-400 mb-2" />
                         <span className="text-sm text-gray-500">
                           Click or drag image to upload
                         </span>
-                      </>
+                        <span className="text-xs text-gray-400 mt-1">
+                          (JPEG, PNG, max 5MB)
+                        </span>
+                      </div>
                     )}
                   </label>
                 </div>
+                {imageFile && (
+                  <div className="flex justify-between items-center mt-2 text-sm text-gray-600">
+                    <span>{imageFile.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImageFile(null);
+                        setImagePreview(null);
+                      }}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                )}
               </div>
-              <button type="submit" className="submit-btn">
-                Create Department
+              <button
+                type="submit"
+                className="submit-btn flex items-center justify-center"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Creating...
+                  </>
+                ) : (
+                  "Create Department"
+                )}
               </button>
             </form>
           </div>

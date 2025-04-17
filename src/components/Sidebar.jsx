@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Users, Calendar, Stethoscope, Send, Building, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, Calendar, Stethoscope, Send, Building, LogOut, Calendar1Icon } from 'lucide-react';
 
 const Sidebar = ({ currentRoute, setCurrentRoute }) => {
   const menuItems = [
@@ -7,8 +7,9 @@ const Sidebar = ({ currentRoute, setCurrentRoute }) => {
     { icon: Users, text: 'Patients', path: 'patients' },
     { icon: Calendar, text: 'Appointments', path: 'appointments' },
     { icon: Stethoscope, text: 'Doctors', path: 'doctors' },
-    { icon: Send, text: 'Send Recommendations', path: 'recommendations' },
+    { icon: Send, text: 'Recommendations', path: 'recommendations' },
     { icon: Building, text: 'Departments', path: 'settings' },
+    {icon: Calendar1Icon, text: 'Schedules', path: 'schedules'}
   ];
 
   return (

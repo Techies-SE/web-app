@@ -10,6 +10,7 @@ import {
   Staffs,
   Settings,
   DoctorDetails,
+  Schedules
 } from "../pages";
 import Recommendations from "../pages/Staffs";
 
@@ -37,6 +38,8 @@ const Layout = ({ currentRoute, setCurrentRoute }) => {
         return <Recommendations />;
       case "settings":
         return <Settings />;
+      case "schedules":
+        return <Schedules />;
       default:
         return <Dashboard />;
     }
