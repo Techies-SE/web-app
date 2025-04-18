@@ -10,8 +10,11 @@ import {
   Clock,
   UserCheck,
   UserX,
+  Eye,
+  Trash2,
 } from "lucide-react";
-import { createPortal } from "react-dom";
+
+import PatientDetails from "./PatientDetails";
 
 const LabDataUploadPopup = ({ show, onClose, onUpload }) => {
   const [file, setFile] = useState(null);
@@ -958,14 +961,16 @@ const Patients = ({ onNavigateToDetails = () => {} }) => {
   //const [file, setFile] = useState(null);
   const [showLabUploadPopup, setShowLabUploadPopup] = useState(false);
   const [showPatientUploadPopup, setShowPatientUploadPopup] = useState(false);
-  const [popupIndex, setPopupIndex] = useState(null);
+  // const [popupIndex, setPopupIndex] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const patientsPerPage = 10;
   const [sortConfig, setSortConfig] = useState({
     key: "hn_number",
     direction: "ascending",
   });
-  const [buttonPosition, setButtonPosition] = useState({ top: 0, left: 0 });
+  //const [buttonPosition, setButtonPosition] = useState({ top: 0, left: 0 });
+  const [viewingDetails, setViewingDetails] = useState(false);
+  const [selectedPatientId, setSelectedPatientId] = useState(null);
 
   useEffect(() => {
     fetch("http://localhost:3000/patients")
@@ -1149,7 +1154,14 @@ const Patients = ({ onNavigateToDetails = () => {} }) => {
   };
 
   const handleViewDetails = (patient) => {
-    onNavigateToDetails(patient.id);
+    // onNavigateToDetails(patient.id);
+    setSelectedPatientId(patient.id);
+    setViewingDetails(true);
+  };
+
+  const handleBackToList = () => {
+    setViewingDetails(false);
+    setSelectedPatientId(null);
   };
 
   const handleDeletePatient = (patientId) => {
@@ -1195,6 +1207,18 @@ const Patients = ({ onNavigateToDetails = () => {} }) => {
       );
     }
   };
+
+  if (viewingDetails) {
+    return (
+      <div className="table-container font-sans">
+        <PatientDetails 
+          patientId={selectedPatientId} 
+          onBack={handleBackToList} 
+        />
+      </div>
+    );
+  }
+
 
   return (
     <div className="table-container font-sans">
@@ -1311,47 +1335,19 @@ const Patients = ({ onNavigateToDetails = () => {} }) => {
                       status={patient.account_status}
                     />
                   </td>
-                  <td className="p-4 relative">
-                    <MoreVertical
-                      size={25}
-                      data-action-icon
-                      className="cursor-pointer text-[#595959]"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        setButtonPosition({
-                          top: rect.bottom + window.scrollY,
-                          left: rect.right - 110, // Adjust popup position from right edge
-                        });
-                        setPopupIndex(popupIndex === index ? null : index);
-                      }}
+                  <td className="p-4 flex items-center space-x-5">
+                    <Eye
+                    size={20}
+                    className="cursor-pointer text-[#3BA092] hover:text-[#2A7E6C]"
+                    onClick={()=> handleViewDetails(patient)}
+                    title="View Details"
                     />
-                    {popupIndex === index &&
-                      createPortal(
-                        <div
-                          data-action-popup
-                          className="fixed bg-white rounded-md shadow-lg z-[9999]"
-                          style={{
-                            top: `${buttonPosition.top}px`,
-                            left: `${buttonPosition.left}px`,
-                            width: "12rem",
-                          }}
-                        >
-                          <button
-                            onClick={() => handleViewDetails(patient)}
-                            className="w-full text-left px-4 py-2 text-black hover:bg-gray-100"
-                          >
-                            View Details
-                          </button>
-                          <button
-                            onClick={() => handleDeletePatient(patient.id)}
-                            className="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100"
-                          >
-                            Delete Data
-                          </button>
-                        </div>,
-                        document.body
-                      )}
+                    <Trash2
+                    size={20}
+                    className="cursor-pointer text-red-500 hover:text-red-700"
+                    onClick={()=> handleDeletePatient(patient)}
+                    title="Delete Patient"
+                    />
                   </td>
                 </tr>
               ))

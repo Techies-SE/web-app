@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import {
   Search,
   Filter,
-  MoreVertical,
   X,
   ChevronUp,
   ChevronDown,
