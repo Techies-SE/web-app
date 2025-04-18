@@ -13,6 +13,7 @@ import {
   Phone,
   Award,
   PlusIcon,
+  PenBox
 } from "lucide-react";
 
 const Settings = () => {
@@ -562,7 +563,7 @@ const Settings = () => {
                     {department.doctor_count}
                   </td>
                   <td className="p-4 flex items-center space-x-5">
-                    <Eye
+                    <PenBox
                       size={20}
                       className="cursor-pointer text-[#3BA092] hover:text-[#2A7E6C]"
                       onClick={() => handleViewDetails(department)}

@@ -12,6 +12,7 @@ import {
   UserX,
   Eye,
   Trash2,
+  PenBox
 } from "lucide-react";
 
 import PatientDetails from "./PatientDetails";
@@ -1323,7 +1324,7 @@ const Patients = ({ onNavigateToDetails = () => {} }) => {
                     />
                   </td>
                   <td className="p-4 flex items-center space-x-5">
-                    <Eye
+                    <PenBox
                     size={20}
                     className="cursor-pointer text-[#3BA092] hover:text-[#2A7E6C]"
                     onClick={()=> handleViewDetails(patient)}
