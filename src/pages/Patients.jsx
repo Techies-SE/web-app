@@ -1117,20 +1117,6 @@ const Patients = ({ onNavigateToDetails = () => {} }) => {
     }
   };
 
-  const handleClickOutside = (event) => {
-    if (
-      !event.target.closest("[data-action-popup]") &&
-      !event.target.closest("[data-action-icon]")
-    ) {
-      setPopupIndex(null);
-    }
-  };
-
-  useEffect(() => {
-    document.addEventListener("click", handleClickOutside);
-    return () => document.removeEventListener("click", handleClickOutside);
-  }, []);
-
   const handleLabUploadSuccess = (result) => {
     if (result.patientId) {
       setPatients((prevPatients) =>
@@ -1155,7 +1141,8 @@ const Patients = ({ onNavigateToDetails = () => {} }) => {
 
   const handleViewDetails = (patient) => {
     // onNavigateToDetails(patient.id);
-    setSelectedPatientId(patient.id);
+    console.log("Navigating to details with HN Number:", patient.hn_number); // Log the HN number
+    setSelectedPatientId(patient.hn_number);
     setViewingDetails(true);
   };
 
@@ -1212,7 +1199,7 @@ const Patients = ({ onNavigateToDetails = () => {} }) => {
     return (
       <div className="table-container font-sans">
         <PatientDetails 
-          patientId={selectedPatientId} 
+          hn_number={selectedPatientId} 
           onBack={handleBackToList} 
         />
       </div>
@@ -1345,7 +1332,7 @@ const Patients = ({ onNavigateToDetails = () => {} }) => {
                     <Trash2
                     size={20}
                     className="cursor-pointer text-red-500 hover:text-red-700"
-                    onClick={()=> handleDeletePatient(patient)}
+                    onClick={()=> handleDeletePatient(patient.id)}
                     title="Delete Patient"
                     />
                   </td>
