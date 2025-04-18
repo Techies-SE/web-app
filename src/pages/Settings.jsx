@@ -12,7 +12,7 @@ import {
   Mail,
   Phone,
   Award,
-  PlusIcon
+  PlusIcon,
 } from "lucide-react";
 
 const Settings = () => {
@@ -36,6 +36,85 @@ const Settings = () => {
     key: "name",
     direction: "ascending",
   });
+
+  const [showDoctorModal, setShowDoctorModal] = useState(false);
+  const [selectedDepartmentForDoctor, setSelectedDepartmentForDoctor] =
+    useState(null);
+  const [newDoctor, setNewDoctor] = useState({
+    name: "",
+    phone_no: "",
+    email: "",
+    password: "",
+    specialization: "",
+    status: "active",
+    department_id: "",
+  });
+
+  const handleOpenDoctorModal = (department) => {
+    setSelectedDepartmentForDoctor(department);
+    setNewDoctor({
+      ...newDoctor,
+      department_id: department.id,
+    });
+    setShowDoctorModal(true);
+  };
+
+  const handleDoctorInputChange = (e) => {
+    setNewDoctor({ ...newDoctor, [e.target.name]: e.target.value });
+  };
+
+  const handleDoctorFormSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("http://localhost:3000/doctors", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newDoctor),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const createdDoctor = await response.json();
+
+      // Refresh department details if we're viewing that department
+      if (
+        showDetailModal &&
+        departmentDetails?.id === selectedDepartmentForDoctor?.id
+      ) {
+        const updatedResponse = await fetch(
+          `http://localhost:3000/departments/${departmentDetails.id}`
+        );
+        const updatedData = await updatedResponse.json();
+        setDepartmentDetails(updatedData);
+      }
+
+      // Refresh the departments list to update doctor counts
+      fetchDepartments();
+
+      setShowDoctorModal(false);
+      setNewDoctor({
+        name: "",
+        phone_no: "",
+        email: "",
+        password: "",
+        specialization: "",
+        status: "active",
+        department_id: "",
+      });
+      alert("Doctor created successfully!");
+    } catch (error) {
+      console.error("Error adding doctor:", error);
+      alert(`Failed to create doctor: ${error.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Sample descriptions for departments (fallback if API returns null)
   const fallbackDescriptions = {
@@ -433,7 +512,7 @@ const Settings = () => {
               {[
                 { key: "name", label: "Department Name", width: "25%" },
                 { key: "description", label: "Description", width: "45%" },
-                { key: "doctor_count", label: "Doctor Count", width: "15%" },
+                { key: "doctor_count", label: "Total Doctors", width: "15%" },
               ].map((column) => (
                 <th
                   key={column.key}
@@ -490,8 +569,10 @@ const Settings = () => {
                       title="View Details"
                     />
                     <PlusIcon
-                    size={20}
-                    className="cursor-pointer text-blue-800 hover:text-blue-900"
+                      size={20}
+                      className="cursor-pointer text-blue-800 hover:text-blue-900"
+                      onClick={() => handleOpenDoctorModal(department)}
+                      title="Add Doctor to Department"
                     />
                     <Trash2
                       size={20}
@@ -918,6 +999,100 @@ const Settings = () => {
                 Close
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Doctor Modal */}
+      {showDoctorModal && selectedDepartmentForDoctor && (
+        <div className="modal-overlay">
+          <div className="modal-container">
+            <div className="modal-header text-[#242222]">
+              <h2>Create New Doctor for {selectedDepartmentForDoctor.name}</h2>
+              <button
+                onClick={() => setShowDoctorModal(false)}
+                className="close-btn"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <form onSubmit={handleDoctorFormSubmit} className="modal-form">
+              <div className="form-group text-[#242222]">
+                <label>Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={newDoctor.name}
+                  onChange={handleDoctorInputChange}
+                  required
+                  placeholder="Enter doctor's name"
+                />
+              </div>
+              <div className="form-group text-[#242222]">
+                <label>Phone Number</label>
+                <input
+                  type="text"
+                  name="phone_no"
+                  value={newDoctor.phone_no}
+                  onChange={handleDoctorInputChange}
+                  required
+                  placeholder="Enter phone number"
+                />
+              </div>
+              <div className="form-group text-[#242222]">
+                <label>Email</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={newDoctor.email}
+                  onChange={handleDoctorInputChange}
+                  required
+                  placeholder="Enter email address"
+                />
+              </div>
+              <div className="form-group text-[#242222]">
+                <label>Password</label>
+                <input
+                  type="password"
+                  name="password"
+                  value={newDoctor.password}
+                  onChange={handleDoctorInputChange}
+                  required
+                  placeholder="Enter password"
+                />
+              </div>
+              <div className="form-group text-[#242222]">
+                <label>Specialization</label>
+                <input
+                  type="text"
+                  name="specialization"
+                  value={newDoctor.specialization}
+                  onChange={handleDoctorInputChange}
+                  required
+                  placeholder="Enter specialization"
+                />
+              </div>
+              <div className="form-group text-[#242222]">
+                <label>Status</label>
+                <select
+                  name="status"
+                  value={newDoctor.status}
+                  onChange={handleDoctorInputChange}
+                  required
+                >
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+              <input
+                type="hidden"
+                name="department_id"
+                value={selectedDepartmentForDoctor.id}
+              />
+              <button type="submit" className="submit-btn" disabled={isLoading}>
+                {isLoading ? "Creating..." : "Create Doctor"}
+              </button>
+            </form>
           </div>
         </div>
       )}

@@ -8,7 +8,6 @@ import {
   Eye,
   Trash2,
 } from "lucide-react";
-import { createPortal } from "react-dom";
 
 const Doctors = ({ setSelectedDoctorId }) => {
   const [doctors, setDoctors] = useState([]);
@@ -331,7 +330,7 @@ const Doctors = ({ setSelectedDoctorId }) => {
                   <td className="p-4 text-start text-[#595959]">
                     {doctor.status}
                   </td>
-                  <td className="p-4 flex items-center space-x-3">
+                  <td className="p-4 flex items-center space-x-5">
                     <Eye
                       size={20}
                       className="cursor-pointer text-[#3BA092] hover:text-[#2A7E6C]"
@@ -461,21 +460,6 @@ const Doctors = ({ setSelectedDoctorId }) => {
                   <option value="inactive">inactive</option>
                 </select>
               </div>
-              {/* <div className="form-group">
-              <label>Department</label>
-              <select
-                name="department_id"
-                value={newDoctor.department_id}
-                onChange={(e) => setNewDoctor({ ...newDoctor, department_id: Number(e.target.value) })}
-                required
-              >
-                {[...Array(10).keys()].map((num) => (
-                  <option key={num + 1} value={num + 1}>
-                    Department {num + 1}
-                  </option>
-                ))}
-              </select>
-            </div> */}
               <div className="form-group text-[#242222]">
                 <label>Department</label>
                 <select
