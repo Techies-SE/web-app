@@ -761,7 +761,7 @@ const Settings = () => {
         >
           <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
             {/* Header */}
-            <div className="px-6 py-4 border-b flex justify-between items-center bg-gray-50">
+            <div className="px-6 py-4 flex justify-between items-center bg-gray-50">
               <h2 className="text-xl font-semibold text-gray-800">
                 Department Details
               </h2>
