@@ -45,7 +45,6 @@ const Settings = () => {
     name: "",
     phone_no: "",
     email: "",
-    password: "",
     specialization: "",
     status: "active",
     department_id: "",
@@ -103,7 +102,6 @@ const Settings = () => {
         name: "",
         phone_no: "",
         email: "",
-        password: "",
         specialization: "",
         status: "active",
         department_id: "",
@@ -1051,7 +1049,7 @@ const Settings = () => {
                   placeholder="Enter email address"
                 />
               </div>
-              <div className="form-group text-[#242222]">
+              {/* <div className="form-group text-[#242222]">
                 <label>Password</label>
                 <input
                   type="password"
@@ -1061,7 +1059,7 @@ const Settings = () => {
                   required
                   placeholder="Enter password"
                 />
-              </div>
+              </div> */}
               <div className="form-group text-[#242222]">
                 <label>Specialization</label>
                 <input
