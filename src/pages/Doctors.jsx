@@ -18,7 +18,6 @@ const Doctors = ({ setSelectedDoctorId }) => {
     name: "",
     phone_no: "",
     email: "",
-    password: "",
     specialization: "",
     status: "",
     department_id: "",
@@ -91,7 +90,6 @@ const Doctors = ({ setSelectedDoctorId }) => {
           name: "",
           phone_no: "",
           email: "",
-          password: "",
           specialization: "",
           status: "active",
           department_id: 1,
@@ -426,7 +424,7 @@ const Doctors = ({ setSelectedDoctorId }) => {
                   placeholder="Enter email address"
                 />
               </div>
-              <div className="form-group text-[#242222]">
+              {/* <div className="form-group text-[#242222]">
                 <label>Password</label>
                 <input
                   type="password"
@@ -436,7 +434,7 @@ const Doctors = ({ setSelectedDoctorId }) => {
                   required
                   placeholder="Enter password"
                 />
-              </div>
+              </div> */}
               <div className="form-group text-[#242222]">
                 <label>Specialization</label>
                 <input
